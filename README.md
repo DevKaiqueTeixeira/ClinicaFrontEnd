@@ -1,4 +1,4 @@
-Aplicação em desenvolvimento totalmente funcioanal, comunicando com banco de dados e tendo inúmeras verificações antes de inserir no banco de dados.
+Aplicação em desenvolvimento totalmente funcional, comunicando com banco de dados e tendo inúmeras verificações antes de inserir no banco de dados.
 
 Tela de cadastro 
 <img width="1919" height="977" alt="image" src="https://github.com/user-attachments/assets/d3c6c9d3-d005-4366-9e0a-a1a5b48e1507" />
