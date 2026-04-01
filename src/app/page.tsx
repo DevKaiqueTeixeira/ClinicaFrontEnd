@@ -12,6 +12,7 @@ import { toast, Toaster } from "sonner";
 import { HTMLMotionProps } from "framer-motion";
 import { useCliente } from "@/app/hooks/useGetName";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // ============================================
 // FUNÇÕES DE MÁSCARA
@@ -61,7 +62,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
         <div className="relative">
           {Icon && (
             <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
-              <Icon size={16} />
+              <Icon color="black" size={16} />
             </div>
           )}
           <input
@@ -189,7 +190,7 @@ export default function CadastroCliente() {
       senha: "",
     },
   });
-
+  const router = useRouter();
   const onSubmit = async (data: ClienteForm) => {
     try {
       const formData = {
@@ -197,16 +198,20 @@ export default function CadastroCliente() {
         cpf: removeMask(data.cpf),
         email: data.email,
         senha: data.senha,
-        celular: removeMask(data.celular), // 👈 conversão aqui
+        celular: removeMask(data.celular),
       };
 
       const response = await enviarCliente(formData);
 
       toast.success("Conta criada com sucesso!", {
         description: `Bem vindo(a), ${response.nome}!`,
+
       });
 
       reset();
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
     } catch (err: unknown) {
       let message = "Erro ao criar conta";
 

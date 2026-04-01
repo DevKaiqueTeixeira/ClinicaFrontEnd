@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 type LoginData = {
-    cpf: string;
+    email: string;
     senha: string;
 };
 
@@ -35,11 +35,11 @@ export function useLogin() {
                 throw new Error(msg || "Erro ao fazer login");
             }
 
-            const result = await res.json();
+            const result: Cliente = await res.json();
             return result;
 
         } catch (err: any) {
-            setError("Erro");
+            setError(err.message || "Erro");
             return null;
         } finally {
             setLoading(false);

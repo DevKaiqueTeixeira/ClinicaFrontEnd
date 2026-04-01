@@ -1,12 +1,15 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState, forwardRef, InputHTMLAttributes, ButtonHTMLAttributes } from "react";
+import { useState, forwardRef, InputHTMLAttributes } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight, Loader2, LucideIcon, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowRight, Loader2, LucideIcon, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { toast, Toaster } from "sonner";
+import { useLogin as useLoginApi } from "../hooks/useLogin";
+import { useEffect } from "react";
 
 // ============================================
 // COMPONENTE FORM INPUT
@@ -32,7 +35,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
                 <div className="relative">
                     {Icon && (
                         <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
-                            <Icon size={16} />
+                            <Icon color="black" size={16} />
                         </div>
                     )}
                     <input
@@ -55,14 +58,17 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
                     />
                 </div>
                 {error && (
-                    <motion.p
+                    <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
-                        className="text-red-200 text-[10px] ml-1"
+                        className="flex items-center gap-1 ml-1 mt-1"
                     >
-                        {error}
-                    </motion.p>
+                        <AlertCircle className=" flex text-red-500 w-4 h-4 shrink-0" />
+                        <p className="text-white text-sm font-bold">{error}</p>
+                    </motion.div>
                 )}
+
+
             </motion.div>
         );
     }
@@ -93,8 +99,8 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                     {label}
                 </label>
                 <div className="relative">
-                    <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
-                        <Lock size={16} />
+                    <div className=" absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
+                        <Lock color="black" size={16} />
                     </div>
                     <input
                         ref={ref}
@@ -123,13 +129,14 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                     </button>
                 </div>
                 {error && (
-                    <motion.p
+                    <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
-                        className="text-red-200 text-[10px] ml-1"
+                        className="flex items-center gap-1 ml-1 mt-1"
                     >
-                        {error}
-                    </motion.p>
+                        <AlertCircle className=" flex text-red-500 w-4 h-4 shrink-0" />
+                        <p className="text-white text-sm font-bold">{error}</p>
+                    </motion.div>
                 )}
             </motion.div>
         );
@@ -143,6 +150,7 @@ PasswordInput.displayName = "PasswordInput";
 // ============================================
 import { HTMLMotionProps } from "framer-motion";
 import React from "react";
+import Link from "next/link";
 
 interface LoadingButtonProps extends HTMLMotionProps<"button"> {
     loading?: boolean;
@@ -163,7 +171,7 @@ export function LoadingButton({
             disabled={loading || disabled}
             className={`
         w-full py-2.5 rounded-lg text-sm
-        bg-gradient-to-r from-orange-500 to-orange-600
+        bg-linear-to-r from-orange-500 to-orange-600
         text-white font-semibold
         hover:from-orange-600 hover:to-orange-700
         disabled:opacity-50 disabled:cursor-not-allowed
@@ -180,42 +188,7 @@ export function LoadingButton({
     );
 }
 
-// ============================================
-// HOOK USE LOGIN
-// ============================================
-type LoginFormData = {
-    email: string;
-    senha: string;
-};
 
-function useLogin() {
-    const [loading, setLoading] = useState(false);
-
-    const fazerLogin = async (form: LoginFormData) => {
-        setLoading(true);
-
-        try {
-            // Simulando uma chamada API
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-
-            // Simulando resposta
-            const response = {
-                id: Math.random().toString(36).substr(2, 9),
-                nome: "João Silva",
-                email: form.email,
-                token: "fake-jwt-token-" + Math.random().toString(36).substr(2, 9),
-            };
-
-            setLoading(false);
-            return response;
-        } catch (err) {
-            setLoading(false);
-            throw err;
-        }
-    };
-
-    return { fazerLogin, loading };
-}
 
 // ============================================
 // SCHEMA DE VALIDAÇÃO
@@ -231,7 +204,9 @@ type LoginForm = z.infer<typeof loginSchema>;
 // COMPONENTE PRINCIPAL - LOGIN
 // ============================================
 export default function LoginCliente() {
-    const { fazerLogin, loading } = useLogin();
+
+
+    const { login: fazerLogin, loading } = useLoginApi();
     const [rememberMe, setRememberMe] = useState(false);
 
     const {
@@ -246,28 +221,32 @@ export default function LoginCliente() {
             senha: "",
         },
     });
-
     const onSubmit = async (data: LoginForm) => {
         try {
-            const response = await fazerLogin(data);
+            const cliente = await fazerLogin(data);
+
+            if (!cliente) {
+                toast.error("Email ou senha incorretos.");
+                return;
+            }
 
             toast.success("Login realizado com sucesso!", {
-                description: `Bem-vindo de volta, ${response.nome}!`,
+                description: `Bem-vindo de volta, ${cliente.nome}!`,
             });
 
             reset();
 
-            // Aqui você redirecionaria para o dashboard
-            console.log("Token:", response.token);
-        } catch (err) {
+            console.log("Cliente logado:", cliente);
+            // redirecionar para dashboard, armazenar token, etc.
+        } catch (err: any) {
             toast.error("Erro ao fazer login", {
-                description: "Email ou senha incorretos.",
+                description: err.message || "Tente novamente.",
             });
         }
     };
 
     return (
-        <div className="h-screen flex overflow-hidden bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600">
+        <div className="h-screen flex overflow-hidden bg-linear-to-br from-orange-400 via-orange-500 to-orange-600">
             <Toaster position="top-center" richColors />
 
             {/* LADO ESQUERDO - Branding */}
@@ -284,7 +263,7 @@ export default function LoginCliente() {
                         alt="Veterinary Clinic"
                         className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-br from-orange-900/80 via-orange-800/70 to-orange-900/80 backdrop-blur-sm"></div>
+                    <div className="absolute inset-0 bg-linear-to-br from-orange-900/80 via-orange-800/70 to-orange-900/80 backdrop-blur-sm"></div>
                 </div>
 
                 {/* Conteúdo */}
@@ -453,7 +432,9 @@ export default function LoginCliente() {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 type="button"
-                                onClick={() => toast.info("Login com Google em breve!")}
+                                onClick={() => {
+                                    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+                                }}
                                 className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-all duration-200 border border-white/30"
                             >
                                 <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -482,13 +463,14 @@ export default function LoginCliente() {
                         <div className="text-center">
                             <p className="text-white/90 text-xs">
                                 Não tem uma conta?{" "}
-                                <button
-                                    type="button"
-                                    onClick={() => toast.info("Ir para página de cadastro!")}
-                                    className="font-semibold text-white underline hover:text-orange-200 transition-colors"
-                                >
-                                    Criar Conta
-                                </button>
+                                <Link href={"/"}>
+                                    <button
+                                        type="button"
+                                        className="font-semibold text-white underline hover:text-orange-200 transition-colors"
+                                    >
+                                        Criar Conta
+                                    </button>
+                                </Link>
                             </p>
                         </div>
 

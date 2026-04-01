@@ -23,7 +23,7 @@ export function useCliente() {
                 cpf: cliente.cpf,
                 email: cliente.email,
                 senha: cliente.senha,
-                telefone: cliente.celular,
+                celular: cliente.celular,
             };
 
             const res = await fetch("http://localhost:8080/clientes", {
@@ -31,6 +31,7 @@ export function useCliente() {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                credentials: "include",
                 body: JSON.stringify(payload),
             });
 
