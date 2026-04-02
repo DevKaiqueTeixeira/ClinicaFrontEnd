@@ -211,7 +211,7 @@ export default function CadastroCliente() {
       reset();
       setTimeout(() => {
         router.push("/login");
-      }, 2000);
+      }, 1000);
     } catch (err: unknown) {
       let message = "Erro ao criar conta";
 

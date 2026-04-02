@@ -205,7 +205,20 @@ type LoginForm = z.infer<typeof loginSchema>;
 // ============================================
 export default function LoginCliente() {
 
+    useEffect(() => {
+        async function buscarUsuario() {
+            const res = await fetch("http://localhost:8080/clientes/user", {
+                credentials: "include"
+            });
 
+            if (!res.ok) return;
+
+            const data = await res.json();
+            console.log("USUÁRIO:", data);
+        }
+
+        buscarUsuario();
+    }, []);
     const { login: fazerLogin, loading } = useLoginApi();
     const [rememberMe, setRememberMe] = useState(false);
 

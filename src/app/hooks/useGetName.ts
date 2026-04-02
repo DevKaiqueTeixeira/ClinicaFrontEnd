@@ -23,7 +23,7 @@ export function useCliente() {
                 cpf: cliente.cpf,
                 email: cliente.email,
                 senha: cliente.senha,
-                celular: cliente.celular,
+                telefone: cliente.celular,
             };
 
             const res = await fetch("http://localhost:8080/clientes", {
@@ -36,7 +36,7 @@ export function useCliente() {
             });
 
             if (!res.ok) {
-                const mensagem = await res.text(); // 🔥 AQUI ESTÁ O SEGREDO
+                const mensagem = await res.text();
                 throw new Error(mensagem);
             }
 
@@ -44,7 +44,7 @@ export function useCliente() {
             return data;
 
         } catch (err: any) {
-            setError(err.message); // 👈 agora pega a mensagem real
+            setError(err.message);
             throw err;
         } finally {
             setLoading(false);
