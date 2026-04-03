@@ -10,6 +10,7 @@ import { Mail, Lock, ArrowRight, Loader2, LucideIcon, Eye, EyeOff, AlertCircle }
 import { toast, Toaster } from "sonner";
 import { useLogin as useLoginApi } from "../hooks/useLogin";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 // ============================================
 // COMPONENTE FORM INPUT
@@ -152,6 +153,7 @@ import { HTMLMotionProps } from "framer-motion";
 import React from "react";
 import Link from "next/link";
 
+
 interface LoadingButtonProps extends HTMLMotionProps<"button"> {
     loading?: boolean;
     children: React.ReactNode;
@@ -221,7 +223,7 @@ export default function LoginCliente() {
     }, []);
     const { login: fazerLogin, loading } = useLoginApi();
     const [rememberMe, setRememberMe] = useState(false);
-
+    const router = useRouter();
     const {
         control,
         handleSubmit,
@@ -235,6 +237,7 @@ export default function LoginCliente() {
         },
     });
     const onSubmit = async (data: LoginForm) => {
+
         try {
             const cliente = await fazerLogin(data);
 
@@ -249,8 +252,9 @@ export default function LoginCliente() {
 
             reset();
 
-            console.log("Cliente logado:", cliente);
-            // redirecionar para dashboard, armazenar token, etc.
+            setTimeout(() => {
+                router.push("/dashboard");
+            }, 1000);
         } catch (err: any) {
             toast.error("Erro ao fazer login", {
                 description: err.message || "Tente novamente.",
