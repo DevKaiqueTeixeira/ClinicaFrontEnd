@@ -35,9 +35,11 @@ import { toast, Toaster } from "sonner";
 type Cliente = {
     nome: string;
     email: string;
+    cpf: string;
 };
 export default function DashboardCliente() {
     const [cliente, setCliente] = useState<Cliente | null>(null);
+
 
     useEffect(() => {
         async function buscarUsuario() {
@@ -56,6 +58,7 @@ export default function DashboardCliente() {
 
         buscarUsuario();
     }, []);
+
     const router = useRouter();
     useEffect(() => {
         async function verificar() {
@@ -93,8 +96,10 @@ export default function DashboardCliente() {
     const [showAgendarModal, setShowAgendarModal] = useState(false);
     const [showPetModal, setShowPetModal] = useState(false);
     const [editingConsulta, setEditingConsulta] = useState<number | null>(null);
-
+    const [showPerfilModal, setShowPerfilModal] = useState(false);
     const [consultas, setConsultas] = useState([
+
+
         {
             id: 1,
             petId: 1,
@@ -130,6 +135,15 @@ export default function DashboardCliente() {
         },
     ]);
 
+
+    const [formPerfil, setFormPerfil] = useState({
+        nome: "",
+        email: "",
+        cpf: "",
+    });
+
+
+
     const [formConsulta, setFormConsulta] = useState({
         petId: "",
         tipo: "",
@@ -152,7 +166,16 @@ export default function DashboardCliente() {
             setShowAgendarModal(true);
         }
 
-
+        if (menu === "perfil") {
+            if (cliente) {
+                setFormPerfil({
+                    nome: cliente.nome || "",
+                    email: cliente.email || "",
+                    cpf: cliente.cpf || "",
+                });
+            }
+            setShowPerfilModal(true);
+        }
     };
 
     const handleAgendarConsulta = () => {
@@ -759,6 +782,90 @@ export default function DashboardCliente() {
                             </motion.div>
                         </motion.div>
                     </>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showPerfilModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => {
+                            setShowPerfilModal(false);
+                            setFormPerfil({ nome: "", email: "", cpf: "" });
+                        }}
+                        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 text-gray-600"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+                        >
+                            <div className="p-6">
+                                <h3 className="text-xl font-bold text-gray-800 mb-4">
+                                    Meu Perfil
+                                </h3>
+
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="text-xs font-medium">Nome</label>
+                                        <input
+                                            type="text"
+                                            value={formPerfil.nome}
+                                            onChange={(e) =>
+                                                setFormPerfil({ ...formPerfil, nome: e.target.value })
+                                            }
+                                            className="w-full px-3 py-2 border rounded-lg"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-medium">Email</label>
+                                        <input
+                                            type="email"
+                                            value={formPerfil.email}
+                                            onChange={(e) =>
+                                                setFormPerfil({ ...formPerfil, email: e.target.value })
+                                            }
+                                            className="w-full px-3 py-2 border rounded-lg"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-medium">CPF</label>
+                                        <input
+                                            type="text"
+                                            value={formPerfil.cpf}
+                                            onChange={(e) =>
+                                                setFormPerfil({ ...formPerfil, cpf: e.target.value })
+                                            }
+                                            placeholder="000.000.000-00"
+                                            className="w-full px-3 py-2 border rounded-lg"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 mt-6">
+                                    <button
+                                        onClick={() => setShowPerfilModal(false)}
+                                        className="flex-1 bg-gray-200 py-2 rounded-lg"
+                                    >
+                                        Cancelar
+                                    </button>
+
+                                    <button
+
+                                        className="flex-1 bg-orange-500 text-white py-2 rounded-lg"
+                                    >
+                                        Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
