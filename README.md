@@ -6,3 +6,7 @@ Tela de cadastro
 Tela de Login 
 <img width="1914" height="976" alt="image" src="https://github.com/user-attachments/assets/f9cc379e-5db2-454a-8373-0b395aed9348" />
 
+Dashboard
+<img width="1910" height="979" alt="image" src="https://github.com/user-attachments/assets/0c4d2527-252b-4124-bb7b-a2d9ad8d3c28" />
+
+
