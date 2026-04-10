@@ -39,16 +39,16 @@ type Cliente = {
 };
 export default function DashboardCliente() {
     const [cliente, setCliente] = useState<Cliente | null>(null);
-
+    const router = useRouter();
 
     useEffect(() => {
-        async function buscarUsuario() {
+        async function verificarUsuario() {
             const res = await fetch("http://localhost:8080/clientes/user", {
                 credentials: "include",
             });
 
             if (!res.ok) {
-                console.log("Não autenticado");
+                router.push("/login");
                 return;
             }
 
@@ -56,23 +56,11 @@ export default function DashboardCliente() {
             setCliente(data);
         }
 
-        buscarUsuario();
+        verificarUsuario();
     }, []);
 
-    const router = useRouter();
-    useEffect(() => {
-        async function verificar() {
-            const res = await fetch("http://localhost:8080/clientes/user", {
-                credentials: "include",
-            });
 
-            if (!res.ok) {
-                router.push("/login");
-            }
-        }
 
-        verificar();
-    }, []);
     const [pets, setPets] = useState([
         {
             id: 1,
