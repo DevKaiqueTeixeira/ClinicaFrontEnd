@@ -36,6 +36,7 @@ type Cliente = {
     nome: string;
     email: string;
     cpf: string;
+    telefone: string;
 };
 export default function DashboardCliente() {
     const [cliente, setCliente] = useState<Cliente | null>(null);
@@ -85,6 +86,9 @@ export default function DashboardCliente() {
     const [showPetModal, setShowPetModal] = useState(false);
     const [editingConsulta, setEditingConsulta] = useState<number | null>(null);
     const [showPerfilModal, setShowPerfilModal] = useState(false);
+    const [slot1, setSlot1] = useState<"empty" | "form" | "filled">("empty");
+    const [slot2, setSlot2] = useState<"empty" | "form" | "filled">("empty");
+    const [showEnderecoModal, setShowEnderecoModal] = useState(false);
     const [consultas, setConsultas] = useState([
 
 
@@ -128,9 +132,15 @@ export default function DashboardCliente() {
         nome: "",
         email: "",
         cpf: "",
+        telefone: "",
     });
 
-
+    const [endereco1, setEndereco1] = useState({
+        rua: "",
+        numero: "",
+        cep: "",
+        cidade: "",
+    });
 
     const [formConsulta, setFormConsulta] = useState({
         petId: "",
@@ -160,6 +170,7 @@ export default function DashboardCliente() {
                     nome: cliente.nome || "",
                     email: cliente.email || "",
                     cpf: cliente.cpf || "",
+                    telefone: cliente.telefone || "",
                 });
             }
             setShowPerfilModal(true);
@@ -781,7 +792,7 @@ export default function DashboardCliente() {
                         exit={{ opacity: 0 }}
                         onClick={() => {
                             setShowPerfilModal(false);
-                            setFormPerfil({ nome: "", email: "", cpf: "" });
+                            setFormPerfil({ nome: "", email: "", cpf: "", telefone: "" });
                         }}
                         className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 text-gray-600"
                     >
@@ -834,6 +845,19 @@ export default function DashboardCliente() {
                                             className="w-full px-3 py-2 border rounded-lg"
                                         />
                                     </div>
+
+                                    <div>
+                                        <label className="text-xs font-medium">Telefone</label>
+                                        <input
+                                            type="text"
+                                            value={formPerfil.telefone}
+                                            onChange={(e) =>
+                                                setFormPerfil({ ...formPerfil, telefone: e.target.value })
+                                            }
+                                            placeholder="000.000.000-00"
+                                            className="w-full px-3 py-2 border rounded-lg"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="flex gap-3 mt-6">
@@ -846,6 +870,150 @@ export default function DashboardCliente() {
 
                                     <button
 
+                                        className="flex-1 bg-orange-500 text-white py-2 rounded-lg"
+                                    >
+                                        Salvar
+                                    </button>
+
+                                </div>
+
+                                <div className="mt-6">
+                                    <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                                        Endereços
+                                    </h4>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                                        {/* SLOT 1 */}
+                                        <div className="border border-dashed border-gray-300 rounded-xl p-4 min-h-[120px] flex items-center justify-center">
+
+                                            {/* VAZIO */}
+                                            {slot1 === "empty" && (
+                                                <button
+                                                    onClick={() => setShowEnderecoModal(true)}
+                                                    className="flex flex-col items-center text-gray-500 hover:text-orange-500 transition"
+                                                >
+                                                    <Plus size={22} />
+                                                    <span className="text-xs mt-1">Adicionar endereço</span>
+                                                </button>
+                                            )}
+
+                                            {/* PREENCHIDO */}
+                                            {slot1 === "filled" && (
+                                                <div className="w-full">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="text-xs font-semibold text-gray-600">
+                                                            Endereço 1
+                                                        </span>
+
+                                                        <button
+                                                            onClick={() => {
+                                                                setSlot1("empty");
+                                                                setEndereco1({ rua: "", numero: "", cep: "", cidade: "" });
+                                                            }}
+                                                            className="text-red-500"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+
+                                                    <p className="text-xs text-gray-600">
+                                                        {endereco1.rua}, {endereco1.numero}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {endereco1.cidade} - {endereco1.cep}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* SLOT 2 (placeholder) */}
+                                        <div className="border border-dashed border-gray-300 rounded-xl p-4 min-h-[120px] flex items-center justify-center">
+                                            <button className="flex flex-col items-center text-gray-500 hover:text-orange-500 transition">
+                                                <Plus size={22} />
+                                                <span className="text-xs mt-1">Adicionar endereço</span>
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {showEnderecoModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowEnderecoModal(false)}
+                        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+                        >
+                            <div className="p-6">
+                                <h3 className="text-xl font-bold text-gray-800 mb-4">
+                                    Novo Endereço
+                                </h3>
+
+                                <div className="space-y-3">
+                                    <input
+                                        placeholder="Rua"
+                                        value={endereco1.rua}
+                                        onChange={(e) => setEndereco1({ ...endereco1, rua: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg"
+                                    />
+
+                                    <input
+                                        placeholder="Número"
+                                        value={endereco1.numero}
+                                        onChange={(e) => setEndereco1({ ...endereco1, numero: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg"
+                                    />
+
+                                    <input
+                                        placeholder="CEP"
+                                        value={endereco1.cep}
+                                        onChange={(e) => setEndereco1({ ...endereco1, cep: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg"
+                                    />
+
+                                    <input
+                                        placeholder="Cidade"
+                                        value={endereco1.cidade}
+                                        onChange={(e) => setEndereco1({ ...endereco1, cidade: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg"
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 mt-6">
+                                    <button
+                                        onClick={() => setShowEnderecoModal(false)}
+                                        className="flex-1 bg-gray-200 py-2 rounded-lg"
+                                    >
+                                        Cancelar
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            if (!endereco1.rua || !endereco1.numero) {
+                                                toast.error("Preencha os campos obrigatórios!");
+                                                return;
+                                            }
+
+                                            setSlot1("filled");
+                                            setShowEnderecoModal(false);
+                                        }}
                                         className="flex-1 bg-orange-500 text-white py-2 rounded-lg"
                                     >
                                         Salvar
