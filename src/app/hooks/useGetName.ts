@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { buildApiUrl } from "@/lib/api";
 
 type ClientePayload = {
     nome: string;
@@ -26,7 +27,7 @@ export function useCliente() {
                 telefone: cliente.celular,
             };
 
-            const res = await fetch("http://localhost:8080/clientes", {
+            const res = await fetch(buildApiUrl("/clientes"), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -43,8 +44,9 @@ export function useCliente() {
             const data = await res.json();
             return data;
 
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Erro ao cadastrar cliente";
+            setError(message);
             throw err;
         } finally {
             setLoading(false);

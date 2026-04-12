@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { buildApiUrl } from "@/lib/api";
 
 type LoginData = {
     email: string;
@@ -22,9 +23,9 @@ export function useLogin() {
         setError(null);
 
         try {
-            const res = await fetch("http://localhost:8080/auth/login", {
+            const res = await fetch(buildApiUrl("/auth/login"), {
                 method: "POST",
-                credentials: "include", 
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -39,8 +40,9 @@ export function useLogin() {
             const result: Cliente = await res.json();
             return result;
 
-        } catch (err: any) {
-            setError(err.message || "Erro");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Erro ao fazer login";
+            setError(message);
             return null;
         } finally {
             setLoading(false);
