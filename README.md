@@ -5,7 +5,7 @@ Aplicacao web para clinica veterinaria com fluxo de cadastro, login e painel do 
 ## Galeria de telas
 
 ### Cadastro
-![Tela de cadastro](<img width="1911" height="980" alt="image" src="https://github.com/user-attachments/assets/a8f52bfa-3424-440d-b9a3-b38693029f21" />
+![Tela de cadastro](public/readme/tela-cadastro.png)
 )
 
 ### Login
