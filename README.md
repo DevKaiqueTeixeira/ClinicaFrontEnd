@@ -18,13 +18,13 @@ Aplicacao web para clinica veterinaria com fluxo de cadastro, login e painel do 
 ![Modal de perfil](public/readme/perfil.jpeg)
 
 ### Modal de endereco
-![Modal de endereco](public/readme/modal-endereco.png)
+![Modal de endereco](public/readme/endereco.jpeg)
 
 ### Modal de pet
-![Modal de pet](public/readme/modal-pet.png)
+![Modal de pet](public/readme/pet.jpeg)
 
 ### Modal de agendamento
-![Modal de agendar consulta](public/readme/modal-agendar-consulta.png)
+![Modal de agendar consulta](public/readme/consulta.jpeg)
 
 
 ## Especificacoes das funcionalidades
