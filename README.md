@@ -15,7 +15,7 @@ Aplicacao web para clinica veterinaria com fluxo de cadastro, login e painel do 
 ![Tela de dashboard](public/readme/tela-dashboard.png)
 
 ### Modal de perfil
-![Modal de perfil](public/readme/modal-perfil.png)
+![Modal de perfil](public/readme/perfil.jpeg)
 
 ### Modal de endereco
 ![Modal de endereco](public/readme/modal-endereco.png)
