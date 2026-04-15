@@ -9,7 +9,7 @@ export function SidebarButton({
   onClick,
   icon,
 }: {
-  label: string;
+  label: ReactNode;
   active: boolean;
   onClick: () => void;
   icon: ReactNode;
@@ -85,7 +85,7 @@ export function ModalShell({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
         onClick={(event) => event.stopPropagation()}
-        className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
       >
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-xl text-slate-900">{title}</h3>

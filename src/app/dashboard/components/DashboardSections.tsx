@@ -23,6 +23,7 @@ export function DashboardSidebar({
   sidebarOpen,
   activeMenu,
   cliente,
+  showPerfilWarning,
   onCloseSidebar,
   onMenuClick,
   onOpenPets,
@@ -31,6 +32,7 @@ export function DashboardSidebar({
   sidebarOpen: boolean;
   activeMenu: string;
   cliente: Cliente;
+  showPerfilWarning: boolean;
   onCloseSidebar: () => void;
   onMenuClick: (menu: string) => void;
   onOpenPets: () => void;
@@ -56,6 +58,9 @@ export function DashboardSidebar({
               </div>
               <div>
                 <p className="text-lg leading-tight">PetCare</p>
+                <p className="max-w-[180px] truncate text-[11px] font-semibold uppercase tracking-wide text-teal-100">
+                  BEM VINDO : {cliente.nome}
+                </p>
                 <p className="text-xs text-teal-100/80">Painel do cliente</p>
               </div>
             </div>
@@ -78,7 +83,16 @@ export function DashboardSidebar({
             icon={<Calendar size={17} />}
           />
           <SidebarButton
-            label="Meu perfil"
+            label={
+              <span className="inline-flex items-center gap-2">
+                Meu perfil
+                {showPerfilWarning ? (
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                    !
+                  </span>
+                ) : null}
+              </span>
+            }
             active={activeMenu === "perfil"}
             onClick={() => onMenuClick("perfil")}
             icon={<User size={17} />}
@@ -221,11 +235,13 @@ export function ConsultasSection({
   onAddConsulta,
   onEditConsulta,
   onCancelConsulta,
+  canCreateConsulta,
 }: {
   consultas: Consulta[];
   onAddConsulta: () => void;
   onEditConsulta: (consulta: Consulta) => void;
   onCancelConsulta: (id: number) => void;
+  canCreateConsulta: boolean;
 }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -234,7 +250,11 @@ export function ConsultasSection({
         <button
           type="button"
           onClick={onAddConsulta}
-          className="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-600"
+          disabled={!canCreateConsulta}
+          className={[
+            "inline-flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold text-white transition",
+            canCreateConsulta ? "bg-amber-500 hover:bg-amber-600" : "cursor-not-allowed bg-slate-300",
+          ].join(" ")}
         >
           <Plus size={14} />
           Nova consulta

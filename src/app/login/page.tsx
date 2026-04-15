@@ -8,12 +8,13 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast, Toaster } from "sonner";
 import { z } from "zod";
-import { useLogin as useLoginApi } from "@/app/hooks/useLogin";
+import { getGoogleAuthorizationUrl } from "@/app/stores/endpoints/auth/getGoogleAuthorizationUrl";
+import { getAuthenticatedClienteClient } from "@/app/stores/endpoints/clientes/getAuthenticatedCliente";
+import { useLogin as useLoginApi } from "@/app/stores/useLogin";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
 import FormField from "@/components/auth/FormField";
 import PasswordField from "@/components/auth/PasswordField";
 import SubmitButton from "@/components/auth/SubmitButton";
-import { buildApiUrl } from "@/lib/api";
 
 const loginSchema = z.object({
   email: z.string().email("Email invalido"),
@@ -43,9 +44,7 @@ export default function LoginCliente() {
   useEffect(() => {
     const validateSession = async () => {
       try {
-        const response = await fetch(buildApiUrl("/clientes/user"), {
-          credentials: "include",
-        });
+        const response = await getAuthenticatedClienteClient();
 
         if (response.ok) {
           router.replace("/dashboard");
@@ -169,7 +168,7 @@ export default function LoginCliente() {
         <button
           type="button"
           onClick={() => {
-            window.location.href = buildApiUrl("/oauth2/authorization/google");
+            window.location.href = getGoogleAuthorizationUrl();
           }}
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-teal-200 hover:bg-teal-50"
         >

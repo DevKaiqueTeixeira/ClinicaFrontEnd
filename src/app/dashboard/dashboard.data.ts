@@ -1,10 +1,16 @@
 import type { Consulta, ConsultaForm, Endereco, Pet, PetForm } from "./dashboard.types";
 
 export const EMPTY_ENDERECO: Endereco = {
-  rua: "",
-  numero: "",
   cep: "",
+  logradouro: "",
+  numero: "",
+  complemento: "",
+  bairro: "",
   cidade: "",
+  estado: "",
+  pais: "",
+  pontoReferencia: "",
+  tipo: "",
 };
 
 export const EMPTY_CONSULTA_FORM: ConsultaForm = {

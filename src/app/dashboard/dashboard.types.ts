@@ -1,4 +1,5 @@
 export type Cliente = {
+  id: number;
   nome: string;
   email: string;
   cpf: string;
@@ -29,15 +30,20 @@ export type Consulta = {
 };
 
 export type Endereco = {
-  rua: string;
-  numero: string;
   cep: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
   cidade: string;
+  estado: string;
+  pais: string;
+  pontoReferencia: string;
+  tipo: string;
 };
 
 export type PerfilForm = {
   nome: string;
-  email: string;
   cpf: string;
   telefone: string;
 };

@@ -2,9 +2,11 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
-import { buildApiUrl } from "@/lib/api";
+import { postAuthLogout } from "@/app/stores/endpoints/auth/postAuthLogout";
+import { postEndereco } from "@/app/stores/endpoints/enderecos/postEndereco";
+import { putAtualizarCliente } from "@/app/stores/endpoints/clientes/putAtualizarCliente";
 import {
   EMPTY_CONSULTA_FORM,
   EMPTY_ENDERECO,
@@ -39,10 +41,101 @@ import {
 
 export type { Cliente };
 
+const CLIENTE_PROFILE_OVERRIDE_KEY = "petcare_cliente_profile_override";
+
+function normalizeText(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function sanitizeCpf(value: unknown): string {
+  const cpf = normalizeText(value);
+  return cpf.toUpperCase().startsWith("GOOGLE_") ? "" : cpf;
+}
+
+function onlyDigits(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
+function maskPhone(value: string): string {
+  return value
+    .replace(/\D/g, "")
+    .replace(/(\d{2})(\d)/, "($1) $2")
+    .replace(/(\d{5})(\d)/, "$1-$2")
+    .replace(/(-\d{4})\d+?$/, "$1");
+}
+
+function loadClienteProfileOverride(clienteId: number): { nome: string; cpf: string; telefone: string } | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = window.localStorage.getItem(CLIENTE_PROFILE_OVERRIDE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as {
+      id?: number;
+      nome?: string;
+      cpf?: string;
+      telefone?: string;
+    };
+
+    if (
+      parsed.id !== clienteId ||
+      typeof parsed.nome !== "string" ||
+      typeof parsed.cpf !== "string" ||
+      typeof parsed.telefone !== "string"
+    ) {
+      return null;
+    }
+
+    return {
+      nome: parsed.nome,
+      cpf: parsed.cpf,
+      telefone: parsed.telefone,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function saveClienteProfileOverride(clienteId: number, payload: { nome: string; cpf: string; telefone: string }): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(
+    CLIENTE_PROFILE_OVERRIDE_KEY,
+    JSON.stringify({
+      id: clienteId,
+      ...payload,
+    })
+  );
+}
+
+function clearClienteProfileOverride(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(CLIENTE_PROFILE_OVERRIDE_KEY);
+}
+
+function normalizeCliente(cliente: Cliente): Cliente {
+  return {
+    ...cliente,
+    cpf: sanitizeCpf((cliente as { cpf?: unknown }).cpf),
+    telefone: normalizeText((cliente as { telefone?: unknown }).telefone),
+  };
+}
+
 export default function DashboardClient({ initialCliente }: { initialCliente: Cliente }) {
   const router = useRouter();
+  const initialClienteNormalizado = normalizeCliente(initialCliente);
 
-  const [cliente, setCliente] = useState<Cliente>(initialCliente);
+  const [cliente, setCliente] = useState<Cliente>(initialClienteNormalizado);
   const [pets, setPets] = useState<Pet[]>(initialPets);
   const [consultas, setConsultas] = useState<Consulta[]>(initialConsultas);
 
@@ -57,10 +150,9 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
   const [editingConsultaId, setEditingConsultaId] = useState<number | null>(null);
 
   const [formPerfil, setFormPerfil] = useState<PerfilForm>({
-    nome: initialCliente.nome ?? "",
-    email: initialCliente.email ?? "",
-    cpf: initialCliente.cpf ?? "",
-    telefone: initialCliente.telefone ?? "",
+    nome: initialClienteNormalizado.nome ?? "",
+    cpf: initialClienteNormalizado.cpf ?? "",
+    telefone: maskPhone(initialClienteNormalizado.telefone ?? ""),
   });
   const [formConsulta, setFormConsulta] = useState<ConsultaForm>({ ...EMPTY_CONSULTA_FORM });
   const [formPet, setFormPet] = useState<PetForm>({ ...EMPTY_PET_FORM });
@@ -69,10 +161,29 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
   const [enderecoSlotAtual, setEnderecoSlotAtual] = useState<0 | 1>(0);
   const [enderecoDraft, setEnderecoDraft] = useState<Endereco>({ ...EMPTY_ENDERECO });
 
+  useEffect(() => {
+    const override = loadClienteProfileOverride(initialClienteNormalizado.id);
+    if (!override) {
+      return;
+    }
+
+    setCliente((current) => ({
+      ...current,
+      nome: override.nome,
+      cpf: override.cpf,
+      telefone: override.telefone,
+    }));
+  }, [initialClienteNormalizado.id]);
+
   const consultasPendentes = consultas.filter(
     (consulta) => consulta.status === "pendente" || consulta.status === "confirmado"
   ).length;
   const consultasConcluidas = consultas.filter((consulta) => consulta.status === "concluido").length;
+  const hasEnderecoCadastrado = enderecos.some((endereco) => endereco !== null);
+  const cadastroCompleto =
+    hasEnderecoCadastrado &&
+    Boolean(sanitizeCpf(cliente.cpf).trim()) &&
+    Boolean(normalizeText(cliente.telefone).trim());
 
   const closeAgendarModal = () => {
     setShowAgendarModal(false);
@@ -95,15 +206,18 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
     setSidebarOpen(false);
 
     if (menu === "agendar") {
+      if (!cadastroCompleto) {
+        toast.warning("Conclua seu cadastro no perfil para agendar consultas.");
+        return;
+      }
       setShowAgendarModal(true);
     }
 
     if (menu === "perfil") {
       setFormPerfil({
         nome: cliente.nome,
-        email: cliente.email,
-        cpf: cliente.cpf,
-        telefone: cliente.telefone,
+        cpf: sanitizeCpf(cliente.cpf),
+        telefone: maskPhone(normalizeText(cliente.telefone)),
       });
       setShowPerfilModal(true);
     }
@@ -117,13 +231,11 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
 
   const handleLogout = async () => {
     try {
-      await fetch(buildApiUrl("/auth/logout"), {
-        method: "POST",
-        credentials: "include",
-      });
+      await postAuthLogout();
     } catch {
       toast.warning("Nao foi possivel confirmar logout no servidor.");
     } finally {
+      clearClienteProfileOverride();
       router.replace("/login");
     }
   };
@@ -145,14 +257,14 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
         current.map((consulta) =>
           consulta.id === editingConsultaId
             ? {
-                ...consulta,
-                petId: pet.id,
-                petNome: pet.nome,
-                tipo: formConsulta.tipo,
-                data: formConsulta.data,
-                hora: formConsulta.hora,
-                observacoes: formConsulta.observacoes,
-              }
+              ...consulta,
+              petId: pet.id,
+              petNome: pet.nome,
+              tipo: formConsulta.tipo,
+              data: formConsulta.data,
+              hora: formConsulta.hora,
+              observacoes: formConsulta.observacoes,
+            }
             : consulta
         )
       );
@@ -215,15 +327,52 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
     toast.success(`${novoPet.nome} cadastrado com sucesso.`);
   };
 
-  const handleSalvarPerfil = () => {
-    if (!formPerfil.nome || !formPerfil.email) {
-      toast.error("Nome e email sao obrigatorios.");
+  const handleSalvarPerfil = async () => {
+    const cpfLimpo = onlyDigits(sanitizeCpf(formPerfil.cpf));
+    const telefoneLimpo = onlyDigits(normalizeText(formPerfil.telefone));
+
+    if (!formPerfil.nome || !cpfLimpo || !telefoneLimpo) {
+      toast.error("Nome, CPF e telefone sao obrigatorios.");
       return;
     }
 
-    setCliente((current) => ({ ...current, ...formPerfil }));
-    setShowPerfilModal(false);
-    toast.success("Perfil atualizado.");
+    if (cpfLimpo.length !== 11) {
+      toast.error("CPF deve conter 11 digitos.");
+      return;
+    }
+
+    if (telefoneLimpo.length < 10) {
+      toast.error("Telefone deve conter ao menos 10 digitos.");
+      return;
+    }
+
+    const payload = {
+      nome: formPerfil.nome.trim(),
+      cpf: cpfLimpo,
+      telefone: telefoneLimpo,
+    };
+
+    try {
+      const response = await putAtualizarCliente(cliente.id, payload);
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Nao foi possivel atualizar o perfil.");
+      }
+
+      setCliente((current) => ({
+        ...current,
+        nome: payload.nome,
+        cpf: payload.cpf,
+        telefone: payload.telefone,
+      }));
+      saveClienteProfileOverride(cliente.id, payload);
+      setShowPerfilModal(false);
+      toast.success("Perfil atualizado.");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Nao foi possivel atualizar o perfil.";
+      toast.error(message);
+    }
   };
 
   const openEnderecoModal = (slot: 0 | 1) => {
@@ -232,20 +381,55 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
     setShowEnderecoModal(true);
   };
 
-  const salvarEndereco = () => {
-    if (!enderecoDraft.rua || !enderecoDraft.numero || !enderecoDraft.cidade) {
-      toast.error("Rua, numero e cidade sao obrigatorios.");
+  const salvarEndereco = async () => {
+    if (
+      !enderecoDraft.cep ||
+      !enderecoDraft.logradouro ||
+      !enderecoDraft.numero ||
+      !enderecoDraft.bairro ||
+      !enderecoDraft.cidade ||
+      !enderecoDraft.estado ||
+      !enderecoDraft.pais ||
+      !enderecoDraft.tipo
+    ) {
+      toast.error("CEP, logradouro, numero, bairro, cidade, estado, pais e tipo sao obrigatorios.");
       return;
     }
 
-    setEnderecos((current) => {
-      const updated = [...current] as [Endereco | null, Endereco | null];
-      updated[enderecoSlotAtual] = { ...enderecoDraft };
-      return updated;
-    });
+    const payload = {
+      cep: enderecoDraft.cep,
+      logradouro: enderecoDraft.logradouro,
+      numero: enderecoDraft.numero,
+      complemento: enderecoDraft.complemento,
+      bairro: enderecoDraft.bairro,
+      cidade: enderecoDraft.cidade,
+      uf: enderecoDraft.estado,
+      pais: enderecoDraft.pais,
+      pontoReferencia: enderecoDraft.pontoReferencia,
+      tipoEndereco: enderecoDraft.tipo,
+      clienteId: cliente.id,
+    };
 
-    closeEnderecoModal();
-    toast.success(`Endereco ${enderecoSlotAtual + 1} salvo.`);
+    try {
+      const response = await postEndereco(payload);
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Nao foi possivel salvar o endereco.");
+      }
+
+      setEnderecos((current) => {
+        const updated = [...current] as [Endereco | null, Endereco | null];
+        updated[enderecoSlotAtual] = { ...enderecoDraft };
+        return updated;
+      });
+
+      closeEnderecoModal();
+      toast.success(`Endereco ${enderecoSlotAtual + 1} salvo.`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Nao foi possivel salvar o endereco.";
+      toast.error(message);
+    }
   };
 
   const removerEndereco = (slot: 0 | 1) => {
@@ -268,6 +452,7 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
           sidebarOpen={sidebarOpen}
           activeMenu={activeMenu}
           cliente={cliente}
+          showPerfilWarning={!cadastroCompleto}
           onCloseSidebar={() => setSidebarOpen(false)}
           onMenuClick={handleMenuClick}
           onOpenPets={handleOpenPets}
@@ -291,9 +476,15 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
 
             <ConsultasSection
               consultas={consultas}
-              onAddConsulta={() => setShowAgendarModal(true)}
+              onAddConsulta={() => {
+                if (!cadastroCompleto) {
+                  return;
+                }
+                setShowAgendarModal(true);
+              }}
               onEditConsulta={handleEditarConsulta}
               onCancelConsulta={handleCancelarConsulta}
+              canCreateConsulta={cadastroCompleto}
             />
           </main>
         </div>

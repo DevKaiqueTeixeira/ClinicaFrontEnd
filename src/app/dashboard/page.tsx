@@ -1,18 +1,13 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getAuthenticatedClienteServer } from "@/app/stores/endpoints/clientes/getAuthenticatedCliente";
 import DashboardClient, { type Cliente } from "./DashboardClient";
-import { buildApiUrl } from "@/lib/api";
 
 async function fetchAuthenticatedCliente(): Promise<Cliente | null> {
   try {
     const cookieHeader = (await cookies()).toString();
 
-    const response = await fetch(buildApiUrl("/clientes/user"), {
-      headers: {
-        cookie: cookieHeader,
-      },
-      cache: "no-store",
-    });
+    const response = await getAuthenticatedClienteServer(cookieHeader);
 
     if (!response.ok) {
       return null;

@@ -4,6 +4,13 @@ import type { Dispatch, SetStateAction } from "react";
 import type { Endereco, PerfilForm } from "../../dashboard.types";
 import { ModalShell } from "../DashboardUI";
 
+const maskPhone = (value: string): string =>
+  value
+    .replace(/\D/g, "")
+    .replace(/(\d{2})(\d)/, "($1) $2")
+    .replace(/(\d{5})(\d)/, "$1-$2")
+    .replace(/(-\d{4})\d+?$/, "$1");
+
 export default function PerfilModal({
   open,
   formPerfil,
@@ -38,17 +45,6 @@ export default function PerfilModal({
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
 
-            <label className="mb-1 block text-xs font-semibold text-slate-700" htmlFor="perfil-email">
-              Email
-            </label>
-            <input
-              id="perfil-email"
-              type="email"
-              value={formPerfil.email}
-              onChange={(event) => setFormPerfil((current) => ({ ...current, email: event.target.value }))}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            />
-
             <label className="mb-1 block text-xs font-semibold text-slate-700" htmlFor="perfil-cpf">
               CPF
             </label>
@@ -66,7 +62,10 @@ export default function PerfilModal({
             <input
               id="perfil-telefone"
               value={formPerfil.telefone}
-              onChange={(event) => setFormPerfil((current) => ({ ...current, telefone: event.target.value }))}
+              onChange={(event) =>
+                setFormPerfil((current) => ({ ...current, telefone: maskPhone(event.target.value) }))
+              }
+              inputMode="numeric"
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               placeholder="(11) 90000-0000"
             />
@@ -90,12 +89,20 @@ export default function PerfilModal({
                     {endereco ? (
                       <>
                         <p className="font-semibold text-slate-700">Endereco {slot + 1}</p>
-                        <p>
-                          {endereco.rua}, {endereco.numero}
+                        <p className="mt-1 inline-flex rounded-full bg-teal-50 px-2 py-0.5 text-[11px] font-semibold text-teal-700">
+                          {endereco.tipo || "Tipo nao informado"}
                         </p>
                         <p>
-                          {endereco.cidade} - {endereco.cep || "sem CEP"}
+                          {endereco.logradouro}, {endereco.numero}
+                          {endereco.complemento ? ` - ${endereco.complemento}` : ""}
                         </p>
+                        <p>
+                          {endereco.bairro} - {endereco.cidade}/{endereco.estado}
+                        </p>
+                        <p>
+                          CEP: {endereco.cep || "sem CEP"} - {endereco.pais || "pais nao informado"}
+                        </p>
+                        {endereco.pontoReferencia ? <p>Ref.: {endereco.pontoReferencia}</p> : null}
                         <div className="mt-2 flex gap-2">
                           <button
                             type="button"

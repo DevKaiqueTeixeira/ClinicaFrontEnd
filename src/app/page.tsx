@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast, Toaster } from "sonner";
 import { z } from "zod";
-import { useCliente } from "@/app/hooks/useGetName";
+import { useCliente } from "@/app/stores/useGetName";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
 import FormField from "@/components/auth/FormField";
 import SubmitButton from "@/components/auth/SubmitButton";
