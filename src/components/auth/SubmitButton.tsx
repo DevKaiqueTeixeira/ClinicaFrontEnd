@@ -19,9 +19,11 @@ export default function SubmitButton({
       whileTap={{ scale: loading || disabled ? 1 : 0.98 }}
       disabled={loading || disabled}
       className={[
-        "flex w-full items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5",
-        "text-sm font-semibold text-white shadow-lg shadow-teal-800/20 transition",
-        "hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60",
+        "relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-2.5",
+        "bg-linear-to-r from-orange-500 to-orange-600 text-sm font-semibold text-white",
+        "shadow-[0_10px_24px_rgba(249,115,22,0.35)] transition",
+        "hover:from-orange-600 hover:to-orange-700",
+        "disabled:cursor-not-allowed disabled:opacity-60",
         className,
       ].join(" ")}
       {...props}

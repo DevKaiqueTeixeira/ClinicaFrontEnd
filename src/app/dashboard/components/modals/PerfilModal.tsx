@@ -35,28 +35,28 @@ export default function PerfilModal({
       {open ? (
         <ModalShell title="Meu perfil" onClose={onClose}>
           <div className="space-y-3">
-            <label className="mb-1 block text-xs font-semibold text-slate-700" htmlFor="perfil-nome">
+            <label className="mb-1 block text-xs font-semibold text-zinc-700" htmlFor="perfil-nome">
               Nome
             </label>
             <input
               id="perfil-nome"
               value={formPerfil.nome}
               onChange={(event) => setFormPerfil((current) => ({ ...current, nome: event.target.value }))}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-orange-500 focus:outline-none"
             />
 
-            <label className="mb-1 block text-xs font-semibold text-slate-700" htmlFor="perfil-cpf">
+            <label className="mb-1 block text-xs font-semibold text-zinc-700" htmlFor="perfil-cpf">
               CPF
             </label>
             <input
               id="perfil-cpf"
               value={formPerfil.cpf}
               onChange={(event) => setFormPerfil((current) => ({ ...current, cpf: event.target.value }))}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-orange-500 focus:outline-none"
               placeholder="000.000.000-00"
             />
 
-            <label className="mb-1 block text-xs font-semibold text-slate-700" htmlFor="perfil-telefone">
+            <label className="mb-1 block text-xs font-semibold text-zinc-700" htmlFor="perfil-telefone">
               Telefone
             </label>
             <input
@@ -66,13 +66,13 @@ export default function PerfilModal({
                 setFormPerfil((current) => ({ ...current, telefone: maskPhone(event.target.value) }))
               }
               inputMode="numeric"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-orange-500 focus:outline-none"
               placeholder="(11) 90000-0000"
             />
           </div>
 
-          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <div className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-700">
               <MapPin size={16} />
               Enderecos
             </div>
@@ -84,12 +84,12 @@ export default function PerfilModal({
                 return (
                   <div
                     key={slot}
-                    className="rounded-lg border border-dashed border-slate-300 bg-white p-3 text-xs text-slate-600"
+                    className="rounded-lg border border-dashed border-zinc-300 bg-white p-3 text-xs text-zinc-600"
                   >
                     {endereco ? (
                       <>
-                        <p className="font-semibold text-slate-700">Endereco {slot + 1}</p>
-                        <p className="mt-1 inline-flex rounded-full bg-teal-50 px-2 py-0.5 text-[11px] font-semibold text-teal-700">
+                        <p className="font-semibold text-zinc-700">Endereco {slot + 1}</p>
+                        <p className="mt-1 inline-flex rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-orange-700">
                           {endereco.tipo || "Tipo nao informado"}
                         </p>
                         <p>
@@ -107,14 +107,14 @@ export default function PerfilModal({
                           <button
                             type="button"
                             onClick={() => onOpenEndereco(slot)}
-                            className="rounded bg-slate-200 px-2 py-1 font-medium text-slate-700"
+                            className="rounded-md bg-zinc-200 px-2 py-1 font-medium text-zinc-700 transition hover:bg-zinc-300"
                           >
                             Editar
                           </button>
                           <button
                             type="button"
                             onClick={() => onRemoveEndereco(slot)}
-                            className="rounded bg-red-100 px-2 py-1 font-medium text-red-700"
+                            className="rounded-md bg-orange-100 px-2 py-1 font-medium text-orange-700 transition hover:bg-orange-200"
                           >
                             Remover
                           </button>
@@ -124,7 +124,7 @@ export default function PerfilModal({
                       <button
                         type="button"
                         onClick={() => onOpenEndereco(slot)}
-                        className="flex w-full items-center justify-center gap-1 rounded-md border border-slate-200 px-2 py-2 font-medium text-slate-600 transition hover:border-teal-300 hover:text-teal-700"
+                        className="flex w-full items-center justify-center gap-1 rounded-md border border-zinc-200 px-2 py-2 font-medium text-zinc-600 transition hover:border-orange-300 hover:text-orange-700"
                       >
                         <Plus size={13} />
                         Adicionar endereco {slot + 1}
@@ -140,14 +140,14 @@ export default function PerfilModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-lg bg-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300"
+              className="w-full rounded-xl bg-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-300"
             >
               Cancelar
             </button>
             <button
               type="button"
               onClick={onSubmit}
-              className="w-full rounded-lg bg-teal-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
+              className="w-full rounded-xl bg-linear-to-r from-orange-500 to-orange-600 px-3 py-2 text-sm font-semibold text-white transition hover:from-orange-600 hover:to-orange-700"
             >
               Salvar perfil
             </button>

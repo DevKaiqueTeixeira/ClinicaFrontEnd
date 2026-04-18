@@ -14,19 +14,23 @@ const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
 
     return (
       <div className="space-y-1">
-        <label htmlFor={inputId} className="ml-1 block text-xs font-semibold text-slate-700">
+        <label
+          htmlFor={inputId}
+          className="ml-1 block text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-700"
+        >
           {label}
         </label>
         <div className="relative">
-          {Icon ? <Icon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-700/80" /> : null}
+          {Icon ? <Icon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600/90" /> : null}
           <input
             ref={ref}
             id={inputId}
             className={[
-              "w-full rounded-xl border bg-white/90 px-3 py-2.5 text-sm text-slate-900 transition",
-              "placeholder:text-slate-400 focus:border-teal-500",
+              "w-full rounded-xl border border-zinc-300/90 bg-white px-3 py-2.5 text-sm text-zinc-900",
+              "shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] transition",
+              "placeholder:text-zinc-400 focus:border-orange-500 focus:bg-orange-50/20",
               Icon ? "pl-9" : "",
-              error ? "border-red-400" : "border-slate-200",
+              error ? "border-red-400" : "",
               className,
             ].join(" ")}
             {...props}

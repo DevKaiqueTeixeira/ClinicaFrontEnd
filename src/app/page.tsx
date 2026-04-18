@@ -95,17 +95,17 @@ export default function CadastroCliente() {
       <Toaster position="top-center" richColors />
       <AuthSplitLayout
         badge="Plataforma PetCare"
-        leftTitle="Sua clinica digital para um cuidado mais humano."
-        leftDescription="Crie seu acesso para agendar consultas, registrar historico e acompanhar a saude do seu pet em um unico lugar."
-        imageAlt="Recepcao da clinica veterinaria"
-        imageSrc="https://images.unsplash.com/photo-1621371236495-1520d8dc72a5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx2ZXRlcmluYXJ5JTIwY2xpbmljJTIwZG9nJTIwY2F0fGVufDF8fHx8MTc3NDY0MjMyMnww&ixlib=rb-4.1.0&q=80&w=1080"
+        leftTitle="Seu novo portal veterinario com visual premium."
+        leftDescription="Centralize consultas, dados cadastrais e acompanhamentos em uma experiencia moderna para tutores e clinica."
+        imageAlt="Veterinaria cuidando de cachorro"
+        imageSrc="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=1400&q=80"
         rightTitle="Criar conta"
-        rightDescription="Preencha os dados para acessar seu painel."
+        rightDescription="Preencha os dados para abrir seu painel personalizado."
         highlights={[
-          { icon: <PawPrint size={16} />, label: "Cadastro rapido" },
-          { icon: <Stethoscope size={16} />, label: "Consultas" },
-          { icon: <Shield size={16} />, label: "Dados seguros" },
-          { icon: <Heart size={16} />, label: "Atencao continua" },
+          { icon: <PawPrint size={16} />, label: "Cadastro imediato" },
+          { icon: <Stethoscope size={16} />, label: "Agenda inteligente" },
+          { icon: <Shield size={16} />, label: "Dados protegidos" },
+          { icon: <Heart size={16} />, label: "Acompanhamento continuo" },
         ]}
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
@@ -190,9 +190,9 @@ export default function CadastroCliente() {
           </div>
         </form>
 
-        <p className="mt-5 text-center text-sm text-slate-600">
+        <p className="mt-5 text-center text-sm text-zinc-600">
           Ja tem acesso?{" "}
-          <Link href="/login" className="font-semibold text-teal-700 hover:text-teal-800">
+          <Link href="/login" className="font-semibold text-orange-600 hover:text-orange-700">
             Fazer login
           </Link>
         </p>

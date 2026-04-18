@@ -85,17 +85,17 @@ export default function LoginCliente() {
       <Toaster position="top-center" richColors />
       <AuthSplitLayout
         badge="Portal do cliente"
-        leftTitle="Acompanhe cada etapa do cuidado do seu pet."
-        leftDescription="Acesse consultas, atualize dados e gerencie agendamentos em uma experiencia simples e segura."
-        imageAlt="Tutor com seu pet em consulta"
-        imageSrc="https://images.unsplash.com/photo-1621371236495-1520d8dc72a5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx2ZXRlcmluYXJ5JTIwY2xpbmljJTIwZG9nJTIwY2F0fGVufDF8fHx8MTc3NDY0MjMyMnww&ixlib=rb-4.1.0&q=80&w=1080"
+        leftTitle="Acesse seu painel com uma experiencia mais profissional."
+        leftDescription="Consulte historico, agendamentos e dados cadastrais do seu pet em um ambiente claro e organizado."
+        imageAlt="Cachorro em atendimento clinico"
+        imageSrc="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=1400&q=80"
         rightTitle="Entrar na conta"
-        rightDescription="Use seu email e senha para abrir seu painel."
+        rightDescription="Use seu email e senha para acessar seu portal personalizado."
         highlights={[
-          { icon: <Stethoscope size={16} />, label: "Historico de atendimentos" },
-          { icon: <ShieldCheck size={16} />, label: "Acesso seguro" },
-          { icon: <PawPrint size={16} />, label: "Multiplos pets" },
-          { icon: <Mail size={16} />, label: "Alertas por notificacao" },
+          { icon: <Stethoscope size={16} />, label: "Historico completo" },
+          { icon: <ShieldCheck size={16} />, label: "Sessao segura" },
+          { icon: <PawPrint size={16} />, label: "Gestao de varios pets" },
+          { icon: <Mail size={16} />, label: "Lembretes importantes" },
         ]}
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
@@ -129,20 +129,20 @@ export default function LoginCliente() {
             )}
           />
 
-          <div className="flex items-center justify-between text-xs text-slate-600">
+          <div className="flex items-center justify-between text-xs text-zinc-600">
             <label className="flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(event) => setRememberMe(event.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-teal-700"
+                className="h-4 w-4 rounded border-zinc-300 text-orange-600"
               />
               <span>Lembrar-me</span>
             </label>
             <button
               type="button"
               onClick={() => toast.info("Funcionalidade em breve")}
-              className="font-medium text-teal-700 hover:text-teal-800"
+              className="font-medium text-orange-600 hover:text-orange-700"
             >
               Esqueci a senha
             </button>
@@ -158,10 +158,10 @@ export default function LoginCliente() {
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
+            <div className="w-full border-t border-zinc-200" />
           </div>
           <div className="relative flex justify-center">
-            <span className="rounded-full bg-white px-3 text-xs text-slate-400">ou</span>
+            <span className="rounded-full bg-white px-3 text-xs text-zinc-400">ou</span>
           </div>
         </div>
 
@@ -170,15 +170,15 @@ export default function LoginCliente() {
           onClick={() => {
             window.location.href = getGoogleAuthorizationUrl();
           }}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-teal-200 hover:bg-teal-50"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:border-orange-200 hover:bg-orange-50"
         >
           <GoogleIcon />
           Continuar com Google
         </button>
 
-        <p className="mt-5 text-center text-sm text-slate-600">
+        <p className="mt-5 text-center text-sm text-zinc-600">
           Ainda nao tem conta?{" "}
-          <Link href="/" className="font-semibold text-teal-700 hover:text-teal-800">
+          <Link href="/" className="font-semibold text-orange-600 hover:text-orange-700">
             Criar cadastro
           </Link>
         </p>

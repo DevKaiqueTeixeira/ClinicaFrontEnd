@@ -1,13 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7faf8;
-  --foreground: #1a2b27;
+  --background: #fff9f2;
+  --foreground: #141414;
   --surface: #ffffff;
-  --brand: #0f766e;
-  --brand-strong: #115e59;
-  --highlight: #f59e0b;
-  --ring: rgba(15, 118, 110, 0.35);
+  --surface-soft: #fff3e5;
+  --brand: #f97316;
+  --brand-strong: #c2410c;
+  --brand-soft: #fed7aa;
+  --highlight: #1f1f1f;
+  --ring: rgba(249, 115, 22, 0.45);
+  --border: #e7d7c5;
+  --shadow: rgba(19, 16, 13, 0.14);
 }
 
 @theme inline {
@@ -21,8 +25,10 @@ body {
   color: var(--foreground);
   font-family: var(--font-manrope), "Segoe UI", sans-serif;
   background-image:
-    radial-gradient(circle at 10% 10%, rgba(15, 118, 110, 0.09) 0, transparent 40%),
-    radial-gradient(circle at 90% 90%, rgba(245, 158, 11, 0.11) 0, transparent 42%);
+    radial-gradient(circle at 8% 10%, rgba(249, 115, 22, 0.22) 0, transparent 36%),
+    radial-gradient(circle at 92% 88%, rgba(0, 0, 0, 0.14) 0, transparent 40%),
+    linear-gradient(160deg, #fffdf8 0%, #fff3e2 55%, #ffedd5 100%);
+  background-attachment: fixed;
 }
 
 h1,
@@ -39,4 +45,9 @@ button:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+::selection {
+  background: var(--brand-soft);
+  color: var(--highlight);
 }

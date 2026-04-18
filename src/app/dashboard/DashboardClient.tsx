@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
@@ -179,6 +180,7 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
     (consulta) => consulta.status === "pendente" || consulta.status === "confirmado"
   ).length;
   const consultasConcluidas = consultas.filter((consulta) => consulta.status === "concluido").length;
+  const clientePrimeiroNome = normalizeText(cliente.nome).split(" ").filter(Boolean)[0] || "Cliente";
   const hasEnderecoCadastrado = enderecos.some((endereco) => endereco !== null);
   const cadastroCompleto =
     hasEnderecoCadastrado &&
@@ -442,10 +444,10 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-zinc-100">
       <Toaster position="top-center" richColors />
 
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_15%,rgba(15,118,110,0.11),transparent_32%),radial-gradient(circle_at_88%_80%,rgba(245,158,11,0.11),transparent_30%)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_15%,rgba(249,115,22,0.18),transparent_32%),radial-gradient(circle_at_88%_80%,rgba(17,17,17,0.16),transparent_30%)]" />
 
       <div className="relative flex min-h-screen">
         <DashboardSidebar
@@ -466,6 +468,49 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
           />
 
           <main className="mx-auto w-full max-w-7xl flex-1 space-y-5 px-4 py-6 sm:px-6">
+            <section className="relative overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-[0_18px_45px_rgba(0,0,0,0.12)]">
+              <Image
+                src="https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=1600&q=80"
+                alt="Veterinaria em atendimento"
+                fill
+                className="object-cover"
+                priority
+              />
+
+              <div className="relative z-10 grid gap-4 p-6 sm:p-8 lg:grid-cols-[1.25fr_auto] lg:items-end">
+                <div className="rounded-2xl border border-zinc-200/90 bg-white/90 p-4 shadow-lg shadow-zinc-900/10 backdrop-blur-[1px] sm:p-5">
+                  <p className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-700">
+                    Painel Profissional
+                  </p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight text-zinc-950 sm:text-3xl">
+                    Ola, {clientePrimeiroNome}. Seu centro de cuidado esta pronto.
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-700">
+                    Acompanhe consultas, mantenha os dados atualizados e organize as informacoes dos seus pets em um unico fluxo.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 sm:w-72">
+                  <div className="rounded-xl border border-zinc-200/90 bg-white/90 p-3 shadow-sm shadow-zinc-900/10 backdrop-blur-[1px]">
+                    <p className="text-[11px] uppercase tracking-wide text-zinc-600">Pendentes</p>
+                    <p className="text-xl font-semibold text-zinc-900">{consultasPendentes}</p>
+                  </div>
+                  <div className="rounded-xl border border-zinc-200/90 bg-white/90 p-3 shadow-sm shadow-zinc-900/10 backdrop-blur-[1px]">
+                    <p className="text-[11px] uppercase tracking-wide text-zinc-600">Concluidas</p>
+                    <p className="text-xl font-semibold text-zinc-900">{consultasConcluidas}</p>
+                  </div>
+                  <div className="rounded-xl border border-zinc-200/90 bg-white/90 p-3 shadow-sm shadow-zinc-900/10 backdrop-blur-[1px]">
+                    <p className="text-[11px] uppercase tracking-wide text-zinc-600">Pets</p>
+                    <p className="text-xl font-semibold text-zinc-900">{pets.length}</p>
+                  </div>
+                  <div className="rounded-xl border border-zinc-200/90 bg-white/90 p-3 shadow-sm shadow-zinc-900/10 backdrop-blur-[1px]">
+                    <p className="text-[11px] uppercase tracking-wide text-zinc-600">Perfil</p>
+                    <p className="text-sm font-semibold text-zinc-900">{cadastroCompleto ? "Completo" : "Pendente"}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <DashboardStats
               consultasPendentes={consultasPendentes}
               totalPets={pets.length}
@@ -535,7 +580,7 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 z-40 bg-slate-900/45 lg:hidden"
+            className="fixed inset-0 z-40 bg-orange-950/35 lg:hidden"
           />
         ) : null}
       </div>

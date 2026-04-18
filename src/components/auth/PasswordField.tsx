@@ -14,19 +14,23 @@ const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
 
     return (
       <div className="space-y-1">
-        <label htmlFor={inputId} className="ml-1 block text-xs font-semibold text-slate-700">
+        <label
+          htmlFor={inputId}
+          className="ml-1 block text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-700"
+        >
           {label}
         </label>
         <div className="relative">
-          <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-700/80" />
+          <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600/90" />
           <input
             ref={ref}
             id={inputId}
             type={showPassword ? "text" : "password"}
             className={[
-              "w-full rounded-xl border bg-white/90 px-3 py-2.5 pl-9 pr-10 text-sm text-slate-900 transition",
-              "placeholder:text-slate-400 focus:border-teal-500",
-              error ? "border-red-400" : "border-slate-200",
+              "w-full rounded-xl border border-zinc-300/90 bg-white px-3 py-2.5 pl-9 pr-10 text-sm text-zinc-900",
+              "shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] transition",
+              "placeholder:text-zinc-400 focus:border-orange-500 focus:bg-orange-50/20",
+              error ? "border-red-400" : "",
               className,
             ].join(" ")}
             {...props}
@@ -35,7 +39,7 @@ const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
             type="button"
             aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
             onClick={() => setShowPassword((value) => !value)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-700"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 transition hover:text-zinc-700"
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
