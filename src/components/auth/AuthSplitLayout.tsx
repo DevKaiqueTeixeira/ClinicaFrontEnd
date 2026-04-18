@@ -42,9 +42,7 @@ export default function AuthSplitLayout({
   children,
 }: AuthSplitLayoutProps) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-linear-to-br from-orange-50 via-amber-50 to-white px-4 py-6 md:px-8 md:py-8">
-      <div className="pointer-events-none absolute -left-24 top-8 h-72 w-72 rounded-full bg-orange-300/45 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-8 h-72 w-72 rounded-full bg-amber-300/35 blur-3xl" />
+    <div className="relative min-h-screen overflow-hidden bg-linear-to-br from-zinc-50 via-white to-zinc-100 px-4 py-6 md:px-8 md:py-8">
 
       <main className="relative mx-auto grid w-full max-w-7xl overflow-hidden rounded-[28px] border border-zinc-300/80 bg-white/95 shadow-[0_30px_80px_rgba(0,0,0,0.16)] backdrop-blur lg:grid-cols-[1.2fr_1fr]">
         <section className="relative hidden min-h-[720px] p-8 lg:flex">
@@ -95,8 +93,7 @@ export default function AuthSplitLayout({
           </div>
         </section>
 
-        <section className="relative bg-linear-to-b from-white via-orange-50/45 to-amber-50/70 p-5 sm:p-8 lg:p-10">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-orange-300/35 blur-3xl" />
+        <section className="relative bg-linear-to-b from-white via-zinc-50/60 to-zinc-100/60 p-5 sm:p-8 lg:p-10">
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
