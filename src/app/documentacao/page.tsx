@@ -1,4 +1,6 @@
 "use client"
+
+import { useEffect, useId, useState } from "react";
 type MethodDoc = {
   name: string;
   signature: string;
@@ -910,6 +912,223 @@ const architectureFlow = [
   "Sessao preserva o usuario autenticado",
 ];
 
+const classDiagramMermaid = String.raw`
+classDiagram
+direction LR
+
+class Cliente {
+  +Long id
+  +String nome
+  +String cpf
+  +String email
+  +String senha
+  +String telefone
+}
+
+class Endereco {
+  +Long id
+  +String cep
+  +String logradouro
+  +String numero
+  +String complemento
+  +String bairro
+  +String cidade
+  +String uf
+  +String pais
+  +String pontoReferencia
+  +String tipoEndereco
+  +Long clienteId
+}
+
+class Login {
+  +String email
+  +String senha
+}
+
+class AuthController {
+  +AuthController(authService)
+  +login(login, session) ResponseEntity
+  +logout(session, response) ResponseEntity
+}
+
+class ClienteController {
+  +ClienteController(service)
+  +salvar(cliente) ResponseEntity
+  +user(session) ResponseEntity
+  +atualizarCliente(id, dadosAtualizados) ResponseEntity
+}
+
+class EnderecoController {
+  +EnderecoController(enderecoService)
+  +cadastrarEndereco(endereco) ResponseEntity
+}
+
+class SecurityConfig {
+  +SecurityConfig(clienteService)
+  +successHandler() AuthenticationSuccessHandler
+  +filterChain(http) SecurityFilterChain
+  +corsConfigurationSource() CorsConfigurationSource
+}
+
+class AuthService {
+  +AuthService(clienteDAO, passwordEncoder)
+  +verificarLogin(login) Cliente
+}
+
+class ClienteService {
+  +ClienteService(clienteDAO, passwordEncoder)
+  -contarLetras(senha) int
+  +salvar(cliente) Cliente
+  +atualizarCliente(id, dadosAtualizados) Cliente
+  +listar() Iterable~Cliente~
+  +loginComGoogle(email, nome) Cliente
+}
+
+class EnderecoService {
+  +EnderecoService(enderecoDAO)
+  +cadastrar(endereco) Endereco
+}
+
+class ClienteDAO {
+  +salvar(cliente) Cliente
+  +buscarPorCpf(cpf) Optional~Cliente~
+  +buscarPorEmail(email) Optional~Cliente~
+  +buscarPorId(id) Optional~Cliente~
+  +existeCpfParaOutroId(cpf, id) boolean
+  +atualizarCampos(id, nome, cpf, telefone) Cliente
+  +listarTodos() List~Cliente~
+}
+
+class EnderecoDAO {
+  +salvar(endereco) Endereco
+  +clienteExiste(clienteId) boolean
+  -buscarUltimoInserido() Optional~Endereco~
+}
+
+class ClienteRepository {
+  +findByEmail(email) Optional~Cliente~
+  +findByCpf(cpf) Optional~Cliente~
+  +findById(id) Optional~Cliente~
+  +save(entity) Cliente
+  +findAll() List~Cliente~
+}
+
+class EnderecoRepository {
+  +save(entity) Endereco
+  +findById(id) Optional~Endereco~
+  +findAll() List~Endereco~
+  +deleteById(id) void
+}
+
+class PasswordEncoder
+class JpaRepository
+class ClienteBuilder
+class EnderecoBuilder
+class LoginBuilder
+
+ClienteBuilder ..> Cliente : build()
+EnderecoBuilder ..> Endereco : build()
+LoginBuilder ..> Login : build()
+
+Cliente "1" --> "N" Endereco : possui
+
+AuthController ..> AuthService : usa
+AuthController ..> Login : recebe
+
+ClienteController ..> ClienteService : usa
+ClienteController ..> Cliente : recebe/retorna
+
+EnderecoController ..> EnderecoService : usa
+EnderecoController ..> Endereco : recebe
+
+SecurityConfig ..> ClienteService : loginComGoogle()
+
+AuthService ..> ClienteDAO : consulta
+AuthService ..> PasswordEncoder : matches()
+AuthService ..> Cliente : retorna
+
+ClienteService ..> ClienteDAO : persiste/consulta
+ClienteService ..> PasswordEncoder : encode()
+ClienteService ..> Cliente : gerencia
+
+EnderecoService ..> EnderecoDAO : persiste/valida
+EnderecoService ..> Endereco : monta
+
+ClienteDAO ..> Cliente : mapeia
+EnderecoDAO ..> Endereco : mapeia
+
+JpaRepository <|-- ClienteRepository
+JpaRepository <|-- EnderecoRepository
+ClienteRepository ..> Cliente
+EnderecoRepository ..> Endereco
+`;
+
+function MermaidClassDiagram({ chart }: { chart: string }) {
+  const rawId = useId();
+  const [svgMarkup, setSvgMarkup] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const renderDiagram = async () => {
+      try {
+        const mermaidModule = await import("mermaid");
+        const mermaid = mermaidModule.default;
+
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: "strict",
+          theme: "base",
+          fontFamily: "Manrope, Segoe UI, sans-serif",
+          themeVariables: {
+            background: "#101722",
+            primaryColor: "#223149",
+            primaryTextColor: "#f1f5ff",
+            primaryBorderColor: "#6aa0ff",
+            lineColor: "#f7933b",
+            secondaryColor: "#1b2a3f",
+            tertiaryColor: "#172235",
+          },
+        });
+
+        const safeId = rawId.replace(/:/g, "");
+        const result = await mermaid.render(`class-diagram-${safeId}-${Date.now()}`, chart);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setSvgMarkup(result.svg);
+        setErrorMessage(null);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        console.error("Falha ao renderizar diagrama Mermaid", error);
+        setErrorMessage("Nao foi possivel renderizar o diagrama automaticamente.");
+      }
+    };
+
+    renderDiagram();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [chart, rawId]);
+
+  if (errorMessage) {
+    return <p className="diagramError">{errorMessage}</p>;
+  }
+
+  if (!svgMarkup) {
+    return <p className="diagramLoading">Renderizando diagrama...</p>;
+  }
+
+  return <div className="diagramSvg" dangerouslySetInnerHTML={{ __html: svgMarkup }} />;
+}
+
 export default function Page() {
   return (
     <main className="docPage">
@@ -922,6 +1141,9 @@ export default function Page() {
         </div>
 
         <nav className="navBar" aria-label="Navegacao principal da documentacao">
+          <a href="#diagrama-classe" className="navLink">
+            Diagrama
+          </a>
           {sections.map((section) => (
             <a key={section.id} href={`#${section.id}`} className="navLink">
               {section.title}
@@ -945,6 +1167,32 @@ export default function Page() {
             </span>
           ))}
         </div>
+      </section>
+
+      <section id="diagrama-classe" className="docSection">
+        <div className="sectionHeader">
+          <h2>Diagrama de Classes</h2>
+          <p className="sectionSubtitle">Visao geral das relacoes entre as camadas</p>
+          <p>
+            Este diagrama foi gerado a partir da propria documentacao da pagina para facilitar leitura da
+            arquitetura em uma unica visao.
+          </p>
+          <p className="diagramHint">
+            Relacao principal: <strong>1 Cliente para N Enderecos</strong> (via <code>clienteId</code> em
+            Endereco).
+          </p>
+        </div>
+
+        <article className="classCard">
+          <MermaidClassDiagram chart={classDiagramMermaid} />
+        </article>
+
+        <article className="classCard diagramCodeCard">
+          <p className="methodCount">Codigo Mermaid usado no diagrama</p>
+          <pre className="diagramCode">
+            <code>{classDiagramMermaid}</code>
+          </pre>
+        </article>
       </section>
 
       {sections.map((section) => (
@@ -1234,6 +1482,69 @@ export default function Page() {
           box-shadow: 0 10px 24px rgba(5, 8, 14, 0.28);
         }
 
+        .diagramLoading,
+        .diagramError {
+          margin: 0;
+          padding: 18px;
+          border-radius: var(--radius-md);
+          border: 1px dashed rgba(255, 255, 255, 0.2);
+          background: rgba(12, 18, 28, 0.65);
+          color: #d7dfef;
+          font-size: 0.92rem;
+        }
+
+        .diagramError {
+          color: #ffcab3;
+          border-color: rgba(255, 119, 77, 0.45);
+          background: rgba(43, 18, 14, 0.65);
+        }
+
+        .diagramSvg {
+          border-radius: var(--radius-md);
+          border: 1px solid rgba(124, 166, 255, 0.35);
+          background: rgba(10, 15, 23, 0.88);
+          overflow: auto;
+          padding: 14px;
+        }
+
+        .diagramSvg :global(svg) {
+          display: block;
+          min-width: 980px;
+          height: auto;
+        }
+
+        .diagramCodeCard {
+          margin-top: 12px;
+        }
+
+        .diagramCode {
+          margin: 0;
+          padding: 12px;
+          border-radius: var(--radius-md);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(8, 12, 20, 0.7);
+          max-height: 360px;
+          overflow: auto;
+          font-size: 0.78rem;
+          line-height: 1.45;
+          color: #c3d2ed;
+        }
+
+        .diagramHint {
+          margin-top: 10px !important;
+          display: inline-block;
+          padding: 8px 12px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 122, 0, 0.42);
+          background: rgba(255, 122, 0, 0.14);
+          color: #ffd3ad !important;
+          font-size: 0.84rem;
+        }
+
+        .diagramHint code {
+          color: #ffdcae;
+        }
+
         .classHeader {
           border-bottom: 1px solid rgba(255, 255, 255, 0.12);
           padding-bottom: 12px;
@@ -1390,6 +1701,10 @@ export default function Page() {
         }
 
         @media (max-width: 640px) {
+          .diagramSvg :global(svg) {
+            min-width: 760px;
+          }
+
           .methodGrid {
             grid-template-columns: 1fr;
           }
