@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import type { MouseEvent } from "react";
 type MethodDoc = {
   name: string;
   signature: string;
@@ -24,6 +25,11 @@ type SectionDoc = {
   subtitle: string;
   overview: string;
   classes: ClassDoc[];
+};
+
+type NavItem = {
+  id: string;
+  label: string;
 };
 
 type FieldSpec = {
@@ -912,6 +918,11 @@ const architectureFlow = [
   "Sessao preserva o usuario autenticado",
 ];
 
+const navigationItems: NavItem[] = [
+  { id: "diagrama-classe", label: "Diagrama" },
+  ...sections.map((section) => ({ id: section.id, label: section.title })),
+];
+
 const classDiagramMermaid = String.raw`
 classDiagram
 direction LR
@@ -1130,23 +1141,131 @@ function MermaidClassDiagram({ chart }: { chart: string }) {
 }
 
 export default function Page() {
+  const topbarRef = useRef<HTMLElement | null>(null);
+  const navBarRef = useRef<HTMLElement | null>(null);
+  const [activeSectionId, setActiveSectionId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const hashId = window.location.hash.replace("#", "");
+      if (hashId && navigationItems.some((item) => item.id === hashId)) {
+        return hashId;
+      }
+    }
+
+    return navigationItems[0]?.id ?? "";
+  });
+
+  const navItems = useMemo(() => navigationItems, []);
+
+  useEffect(() => {
+    const calculateOffset = () => {
+      const topbarHeight = topbarRef.current?.offsetHeight ?? 0;
+      const extraGap = window.innerWidth <= 980 ? 18 : 26;
+      const finalOffset = topbarHeight + extraGap;
+
+      document.documentElement.style.setProperty("--doc-sticky-offset", `${finalOffset}px`);
+      return finalOffset;
+    };
+
+    let stickyOffset = calculateOffset();
+
+    const updateActiveSection = () => {
+      const currentY = window.scrollY + stickyOffset + 4;
+      let currentSection = navItems[0]?.id ?? "";
+
+      for (const item of navItems) {
+        const element = document.getElementById(item.id);
+
+        if (!element) {
+          continue;
+        }
+
+        if (element.offsetTop <= currentY) {
+          currentSection = item.id;
+        }
+      }
+
+      setActiveSectionId((previous) => (previous === currentSection ? previous : currentSection));
+    };
+
+    const handleResize = () => {
+      stickyOffset = calculateOffset();
+      updateActiveSection();
+    };
+
+    updateActiveSection();
+
+    const handleHashChange = () => {
+      const nextHashId = window.location.hash.replace("#", "");
+      if (nextHashId && navItems.some((item) => item.id === nextHashId)) {
+        setActiveSectionId(nextHashId);
+      }
+    };
+
+    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("hashchange", handleHashChange);
+
+    return () => {
+      window.removeEventListener("scroll", updateActiveSection);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("hashchange", handleHashChange);
+      document.documentElement.style.removeProperty("--doc-sticky-offset");
+    };
+  }, [navItems]);
+
+  useEffect(() => {
+    const navBar = navBarRef.current;
+    if (!navBar || !activeSectionId) {
+      return;
+    }
+
+    const activeLink = navBar.querySelector<HTMLAnchorElement>(`a[data-nav-id="${activeSectionId}"]`);
+    activeLink?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [activeSectionId]);
+
+  const handleNavClick = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const target = document.getElementById(id);
+    if (!target) {
+      return;
+    }
+
+    const topbarHeight = topbarRef.current?.offsetHeight ?? 0;
+    const extraGap = window.innerWidth <= 980 ? 18 : 26;
+    const scrollOffset = topbarHeight + extraGap;
+    const nextTop = target.getBoundingClientRect().top + window.scrollY - scrollOffset;
+
+    window.scrollTo({ top: Math.max(nextTop, 0), behavior: "smooth" });
+    window.history.replaceState(null, "", `#${id}`);
+    setActiveSectionId(id);
+  };
+
   return (
     <main className="docPage">
       <div className="pageGlow" aria-hidden="true" />
 
-      <header className="topbar">
+      <header className="topbar" ref={topbarRef}>
         <div className="brandWrap">
           <div className="brand">KaiqueTeixeiraDEV</div>
           <p className="brandSub">Mayara Dev</p>
         </div>
 
-        <nav className="navBar" aria-label="Navegacao principal da documentacao">
-          <a href="#diagrama-classe" className="navLink">
-            Diagrama
-          </a>
-          {sections.map((section) => (
-            <a key={section.id} href={`#${section.id}`} className="navLink">
-              {section.title}
+        <nav className="navBar" aria-label="Navegacao principal da documentacao" ref={navBarRef}>
+          {navItems.map((item) => (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              data-nav-id={item.id}
+              onClick={(event) => handleNavClick(event, item.id)}
+              className={`navLink ${activeSectionId === item.id ? "navLinkActive" : ""}`}
+              aria-current={activeSectionId === item.id ? "location" : undefined}
+            >
+              {item.label}
             </a>
           ))}
         </nav>
@@ -1266,6 +1385,7 @@ export default function Page() {
           margin: 0;
           padding: 0;
           background: #0d0f14;
+          scroll-behavior: smooth;
         }
 
         * {
@@ -1320,7 +1440,7 @@ export default function Page() {
 
         .topbar {
           position: sticky;
-          top: 0;
+          top: 8px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -1331,6 +1451,7 @@ export default function Page() {
           border-radius: 18px;
           backdrop-filter: blur(12px);
           background: rgba(14, 18, 27, 0.7);
+          z-index: 20;
         }
 
         .brand {
@@ -1372,6 +1493,8 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
+          white-space: nowrap;
+          flex-shrink: 0;
           text-decoration: none;
           color: var(--text);
           font-weight: 600;
@@ -1387,6 +1510,18 @@ export default function Page() {
           transform: translateY(-1px);
           border-color: rgba(255, 122, 0, 0.55);
           background: var(--accent-soft);
+        }
+
+        .navLink:focus-visible {
+          outline: 2px solid rgba(255, 168, 96, 0.85);
+          outline-offset: 2px;
+        }
+
+        .navLinkActive {
+          border-color: rgba(255, 140, 46, 0.9);
+          background: rgba(255, 122, 0, 0.22);
+          color: #ffe7cf;
+          box-shadow: inset 0 0 0 1px rgba(255, 180, 120, 0.3);
         }
 
         .hero {
@@ -1443,7 +1578,7 @@ export default function Page() {
 
         .docSection {
           margin-bottom: 26px;
-          scroll-margin-top: 104px;
+          scroll-margin-top: var(--doc-sticky-offset, 112px);
         }
 
         .sectionHeader {
@@ -1674,16 +1809,35 @@ export default function Page() {
           }
 
           .topbar {
+            top: 6px;
             align-items: flex-start;
             flex-direction: column;
-            position: sticky;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-radius: 14px;
+            padding: 12px;
+          }
+
+          .brandWrap {
+            width: 100%;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: baseline;
           }
 
           .navBar {
             width: 100%;
             flex-wrap: nowrap;
             overflow-x: auto;
+            overflow-y: hidden;
             padding-bottom: 4px;
+            padding-right: 2px;
+            scroll-snap-type: x proximity;
+            justify-content: flex-start;
+          }
+
+          .navLink {
+            scroll-snap-align: center;
           }
 
           .navBar::-webkit-scrollbar {
@@ -1701,6 +1855,21 @@ export default function Page() {
         }
 
         @media (max-width: 640px) {
+          .docPage {
+            padding: 12px 10px 26px;
+          }
+
+          .topbar {
+            top: 4px;
+            margin-bottom: 16px;
+            padding: 10px;
+          }
+
+          .brand,
+          .brandSub {
+            font-size: 0.94rem;
+          }
+
           .diagramSvg :global(svg) {
             min-width: 760px;
           }
@@ -1718,6 +1887,10 @@ export default function Page() {
           .notePill,
           .rulePill {
             font-size: 0.75rem;
+          }
+
+          .navLink {
+            padding: 8px 11px;
           }
 
           .methodCard p {
