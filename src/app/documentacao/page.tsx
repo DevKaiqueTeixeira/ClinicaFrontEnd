@@ -107,7 +107,7 @@ const jpaRepositoryInheritedMethods: MethodDoc[] = [
     name: "saveAll",
     signature: "saveAll(Iterable<S> entities)",
     returns: "List<S>",
-    description: "Salva uma colecao de entidades em lote.",
+    description: "Salva uma coleção de entidades em lote.",
   },
   {
     name: "findById",
