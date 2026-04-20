@@ -149,6 +149,7 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
   const [showEnderecoModal, setShowEnderecoModal] = useState(false);
 
   const [editingConsultaId, setEditingConsultaId] = useState<number | null>(null);
+  const [editingPetId, setEditingPetId] = useState<number | null>(null);
 
   const [formPerfil, setFormPerfil] = useState<PerfilForm>({
     nome: initialClienteNormalizado.nome ?? "",
@@ -195,7 +196,14 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
 
   const closePetModal = () => {
     setShowPetModal(false);
+    setEditingPetId(null);
     setFormPet({ ...EMPTY_PET_FORM });
+  };
+
+  const openCreatePetModal = () => {
+    setEditingPetId(null);
+    setFormPet({ ...EMPTY_PET_FORM });
+    setShowPetModal(true);
   };
 
   const closeEnderecoModal = () => {
@@ -228,7 +236,7 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
   const handleOpenPets = () => {
     setActiveMenu("pets");
     setSidebarOpen(false);
-    setShowPetModal(true);
+    openCreatePetModal();
   };
 
   const handleLogout = async () => {
@@ -308,25 +316,94 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
     toast.success("Consulta cancelada.");
   };
 
-  const handleCadastrarPet = () => {
-    if (!formPet.nome || !formPet.tipo) {
+  const handleSalvarPet = () => {
+    const nome = formPet.nome.trim();
+    const tipo = formPet.tipo;
+
+    if (!nome || !tipo) {
       toast.error("Preencha nome e tipo do pet.");
+      return;
+    }
+
+    const petPayload = {
+      nome,
+      tipo,
+      raca: formPet.raca.trim(),
+      idade: formPet.idade.trim(),
+      foto: PET_EMOJI_MAP[tipo] ?? "🐾",
+    };
+
+    if (editingPetId) {
+      setPets((current) =>
+        current.map((pet) =>
+          pet.id === editingPetId
+            ? {
+              ...pet,
+              ...petPayload,
+            }
+            : pet
+        )
+      );
+
+      setConsultas((current) =>
+        current.map((consulta) =>
+          consulta.petId === editingPetId
+            ? {
+              ...consulta,
+              petNome: petPayload.nome,
+            }
+            : consulta
+        )
+      );
+
+      closePetModal();
+      setActiveMenu("pets");
+      toast.success(`${petPayload.nome} atualizado com sucesso.`);
       return;
     }
 
     const novoPet: Pet = {
       id: getNextId(pets),
-      nome: formPet.nome,
-      tipo: formPet.tipo,
-      raca: formPet.raca,
-      idade: formPet.idade,
-      foto: PET_EMOJI_MAP[formPet.tipo] ?? "🐾",
+      ...petPayload,
     };
 
     setPets((current) => [...current, novoPet]);
     closePetModal();
     setActiveMenu("pets");
     toast.success(`${novoPet.nome} cadastrado com sucesso.`);
+  };
+
+  const handleEditarPet = (pet: Pet) => {
+    setFormPet({
+      nome: pet.nome,
+      tipo: pet.tipo,
+      raca: pet.raca,
+      idade: pet.idade,
+    });
+    setEditingPetId(pet.id);
+    setActiveMenu("pets");
+    setShowPetModal(true);
+  };
+
+  const handleExcluirPet = (id: number) => {
+    const pet = pets.find((item) => item.id === id);
+    if (!pet) {
+      return;
+    }
+
+    if (!window.confirm(`Deseja excluir ${pet.nome}?`)) {
+      return;
+    }
+
+    setPets((current) => current.filter((item) => item.id !== id));
+    setConsultas((current) => current.filter((consulta) => consulta.petId !== id));
+    setFormConsulta((current) => (current.petId === String(id) ? { ...current, petId: "" } : current));
+
+    if (editingPetId === id) {
+      closePetModal();
+    }
+
+    toast.success(`${pet.nome} excluido com sucesso.`);
   };
 
   const handleSalvarPerfil = async () => {
@@ -517,7 +594,12 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
               consultasConcluidas={consultasConcluidas}
             />
 
-            <PetsSection pets={pets} onAddPet={() => setShowPetModal(true)} />
+            <PetsSection
+              pets={pets}
+              onAddPet={openCreatePetModal}
+              onEditPet={handleEditarPet}
+              onDeletePet={handleExcluirPet}
+            />
 
             <ConsultasSection
               consultas={consultas}
@@ -546,10 +628,11 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
 
         <PetModal
           open={showPetModal}
+          isEditing={editingPetId !== null}
           formPet={formPet}
           setFormPet={setFormPet}
           onClose={closePetModal}
-          onSubmit={handleCadastrarPet}
+          onSubmit={handleSalvarPet}
         />
 
         <PerfilModal

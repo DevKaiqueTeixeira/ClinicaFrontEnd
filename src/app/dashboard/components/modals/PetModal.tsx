@@ -5,12 +5,14 @@ import { ModalShell } from "../DashboardUI";
 
 export default function PetModal({
   open,
+  isEditing,
   formPet,
   setFormPet,
   onClose,
   onSubmit,
 }: {
   open: boolean;
+  isEditing: boolean;
   formPet: PetForm;
   setFormPet: Dispatch<SetStateAction<PetForm>>;
   onClose: () => void;
@@ -19,7 +21,7 @@ export default function PetModal({
   return (
     <AnimatePresence>
       {open ? (
-        <ModalShell title="Cadastrar pet" onClose={onClose}>
+        <ModalShell title={isEditing ? "Atualizar pet" : "Cadastrar pet"} onClose={onClose}>
           <div className="space-y-3">
             <label className="mb-1 block text-xs font-semibold text-zinc-700" htmlFor="pet-nome">
               Nome *
@@ -85,7 +87,7 @@ export default function PetModal({
               onClick={onSubmit}
               className="w-full rounded-xl bg-linear-to-r from-orange-500 to-orange-600 px-3 py-2 text-sm font-semibold text-white transition hover:from-orange-600 hover:to-orange-700"
             >
-              Cadastrar
+              {isEditing ? "Atualizar" : "Cadastrar"}
             </button>
           </div>
         </ModalShell>

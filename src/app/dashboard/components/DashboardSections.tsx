@@ -196,7 +196,17 @@ export function DashboardStats({
   );
 }
 
-export function PetsSection({ pets, onAddPet }: { pets: Pet[]; onAddPet: () => void }) {
+export function PetsSection({
+  pets,
+  onAddPet,
+  onEditPet,
+  onDeletePet,
+}: {
+  pets: Pet[];
+  onAddPet: () => void;
+  onEditPet: (pet: Pet) => void;
+  onDeletePet: (id: number) => void;
+}) {
   return (
     <section className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-[0_16px_36px_rgba(18,18,18,0.08)] sm:p-5">
       <div className="mb-4 flex items-center justify-between">
@@ -211,24 +221,49 @@ export function PetsSection({ pets, onAddPet }: { pets: Pet[]; onAddPet: () => v
         </button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {pets.map((pet) => (
-          <motion.article
-            key={pet.id}
-            whileHover={{ y: -3 }}
-            className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-linear-to-br from-white via-orange-50/50 to-zinc-100 p-4"
-          >
-            <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-orange-400" />
-            <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 text-3xl">
-              {pet.foto}
-            </div>
-            <p className="text-sm font-semibold text-zinc-800">{pet.nome}</p>
-            <p className="text-xs text-zinc-500">{pet.tipo}</p>
-            <p className="mt-2 text-xs text-zinc-500">{pet.raca || "Raca nao informada"}</p>
-            <p className="text-xs text-zinc-500">{pet.idade || "Idade nao informada"}</p>
-          </motion.article>
-        ))}
-      </div>
+      {pets.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500">
+          Nenhum pet cadastrado ainda.
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {pets.map((pet) => (
+            <motion.article
+              key={pet.id}
+              whileHover={{ y: -3 }}
+              className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-linear-to-br from-white via-orange-50/50 to-zinc-100 p-4"
+            >
+              <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-orange-400" />
+              <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 text-3xl">
+                {pet.foto}
+              </div>
+              <p className="text-sm font-semibold text-zinc-800">{pet.nome}</p>
+              <p className="text-xs text-zinc-500">{pet.tipo}</p>
+              <p className="mt-2 text-xs text-zinc-500">{pet.raca || "Raca nao informada"}</p>
+              <p className="text-xs text-zinc-500">{pet.idade || "Idade nao informada"}</p>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => onEditPet(pet)}
+                  className="inline-flex items-center gap-1 rounded-lg bg-zinc-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-800"
+                >
+                  <Edit size={12} />
+                  Atualizar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDeletePet(pet.id)}
+                  className="inline-flex items-center gap-1 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-orange-600"
+                >
+                  <Trash2 size={12} />
+                  Excluir
+                </button>
+              </div>
+            </motion.article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
