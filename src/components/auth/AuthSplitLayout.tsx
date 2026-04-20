@@ -1,5 +1,7 @@
+import { BookText } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 type HighlightItem = {
@@ -113,6 +115,15 @@ export default function AuthSplitLayout({
           </motion.div>
         </section>
       </main>
+
+      <Link
+        href="/documentacao"
+        aria-label="Abrir documentacao tecnica"
+        title="Abrir documentacao tecnica"
+        className="fixed right-4 bottom-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-300/85 bg-white/90 text-zinc-700 shadow-[0_10px_22px_rgba(0,0,0,0.2)] backdrop-blur transition hover:-translate-y-0.5 hover:border-orange-300 hover:text-orange-600 sm:right-6 sm:bottom-6"
+      >
+        <BookText size={16} />
+      </Link>
     </div>
   );
 }
