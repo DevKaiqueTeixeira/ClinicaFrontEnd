@@ -1,4 +1,4 @@
-import type { Consulta, ConsultaForm, Endereco, Pet, PetForm } from "./dashboard.types";
+import type { Consulta, ConsultaForm, Endereco, PetForm } from "./dashboard.types";
 
 export const EMPTY_ENDERECO: Endereco = {
   cep: "",
@@ -23,37 +23,15 @@ export const EMPTY_CONSULTA_FORM: ConsultaForm = {
 
 export const EMPTY_PET_FORM: PetForm = {
   nome: "",
-  tipo: "",
+  especie: "",
   raca: "",
-  idade: "",
+  sexo: "",
+  dataNascimento: "",
+  peso: "",
+  cor: "",
+  porte: "",
+  observacoes: "",
 };
-
-export const PET_EMOJI_MAP: Record<string, string> = {
-  Cachorro: "🐕",
-  Gato: "🐈",
-  Coelho: "🐇",
-  Passaro: "🦜",
-  Hamster: "🐹",
-};
-
-export const initialPets: Pet[] = [
-  {
-    id: 1,
-    nome: "Rex",
-    tipo: "Cachorro",
-    raca: "Golden Retriever",
-    idade: "3 anos",
-    foto: "🐕",
-  },
-  {
-    id: 2,
-    nome: "Mimi",
-    tipo: "Gato",
-    raca: "Persa",
-    idade: "2 anos",
-    foto: "🐈",
-  },
-];
 
 export const initialConsultas: Consulta[] = [
   {

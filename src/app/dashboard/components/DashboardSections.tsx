@@ -19,6 +19,22 @@ import { formatConsultaDate } from "../dashboard.data";
 import type { Cliente, Consulta, Pet } from "../dashboard.types";
 import { SidebarButton, StatCard, StatusBadge } from "./DashboardUI";
 
+const PET_ICON_MAP: Record<string, string> = {
+  Cachorro: "🐕",
+  Gato: "🐈",
+  Coelho: "🐇",
+  Passaro: "🦜",
+  Hamster: "🐹",
+};
+
+function getPetIcon(especie: string): string {
+  return PET_ICON_MAP[especie] ?? "🐾";
+}
+
+function formatPeso(peso: number): string {
+  return Number.isFinite(peso) ? `${peso.toFixed(2)} kg` : "Peso nao informado";
+}
+
 export function DashboardSidebar({
   sidebarOpen,
   activeMenu,
@@ -235,12 +251,13 @@ export function PetsSection({
             >
               <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-orange-400" />
               <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 text-3xl">
-                {pet.foto}
+                {getPetIcon(pet.especie)}
               </div>
               <p className="text-sm font-semibold text-zinc-800">{pet.nome}</p>
-              <p className="text-xs text-zinc-500">{pet.tipo}</p>
+              <p className="text-xs text-zinc-500">{pet.especie}</p>
               <p className="mt-2 text-xs text-zinc-500">{pet.raca || "Raca nao informada"}</p>
-              <p className="text-xs text-zinc-500">{pet.idade || "Idade nao informada"}</p>
+              <p className="text-xs text-zinc-500">{pet.sexo || "Sexo nao informado"}</p>
+              <p className="text-xs text-zinc-500">{formatPeso(pet.peso)} - {pet.porte || "Porte nao informado"}</p>
 
               <div className="mt-3 flex flex-wrap gap-2">
                 <button

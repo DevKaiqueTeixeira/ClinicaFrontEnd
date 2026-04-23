@@ -7,15 +7,17 @@ import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
 import { postAuthLogout } from "@/app/stores/endpoints/auth/postAuthLogout";
 import { postEndereco } from "@/app/stores/endpoints/enderecos/postEndereco";
+import { deletePet } from "@/app/stores/endpoints/pets/deletePet";
+import { getPetsByCliente } from "@/app/stores/endpoints/pets/getPetsByCliente";
+import { postPet } from "@/app/stores/endpoints/pets/postPet";
+import { putPet } from "@/app/stores/endpoints/pets/putPet";
 import { putAtualizarCliente } from "@/app/stores/endpoints/clientes/putAtualizarCliente";
 import {
   EMPTY_CONSULTA_FORM,
   EMPTY_ENDERECO,
   EMPTY_PET_FORM,
-  PET_EMOJI_MAP,
   getNextId,
   initialConsultas,
-  initialPets,
 } from "./dashboard.data";
 import type {
   Cliente,
@@ -132,12 +134,27 @@ function normalizeCliente(cliente: Cliente): Cliente {
   };
 }
 
+function normalizePet(pet: Pet): Pet {
+  const rawPeso = Number((pet as { peso?: unknown }).peso);
+
+  return {
+    ...pet,
+    observacoes: normalizeText((pet as { observacoes?: unknown }).observacoes),
+    peso: Number.isFinite(rawPeso) ? rawPeso : 0,
+  };
+}
+
+async function getResponseMessage(response: Response, fallbackMessage: string): Promise<string> {
+  const message = (await response.text()).trim();
+  return message || fallbackMessage;
+}
+
 export default function DashboardClient({ initialCliente }: { initialCliente: Cliente }) {
   const router = useRouter();
   const initialClienteNormalizado = normalizeCliente(initialCliente);
 
   const [cliente, setCliente] = useState<Cliente>(initialClienteNormalizado);
-  const [pets, setPets] = useState<Pet[]>(initialPets);
+  const [pets, setPets] = useState<Pet[]>([]);
   const [consultas, setConsultas] = useState<Consulta[]>(initialConsultas);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -175,6 +192,42 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
       cpf: override.cpf,
       telefone: override.telefone,
     }));
+  }, [initialClienteNormalizado.id]);
+
+  useEffect(() => {
+    let active = true;
+
+    const carregarPets = async () => {
+      try {
+        const response = await getPetsByCliente(initialClienteNormalizado.id);
+
+        if (!response.ok) {
+          const message = await getResponseMessage(response, "Nao foi possivel carregar os pets.");
+          throw new Error(message);
+        }
+
+        const petsResponse = (await response.json()) as Pet[];
+
+        if (!active) {
+          return;
+        }
+
+        setPets(petsResponse.map(normalizePet));
+      } catch (error: unknown) {
+        if (!active) {
+          return;
+        }
+
+        const message = error instanceof Error ? error.message : "Nao foi possivel carregar os pets.";
+        toast.error(message);
+      }
+    };
+
+    void carregarPets();
+
+    return () => {
+      active = false;
+    };
   }, [initialClienteNormalizado.id]);
 
   const consultasPendentes = consultas.filter(
@@ -316,76 +369,106 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
     toast.success("Consulta cancelada.");
   };
 
-  const handleSalvarPet = () => {
+  const handleSalvarPet = async () => {
     const nome = formPet.nome.trim();
-    const tipo = formPet.tipo;
+    const especie = formPet.especie;
+    const raca = formPet.raca.trim();
+    const sexo = formPet.sexo;
+    const dataNascimento = formPet.dataNascimento;
+    const cor = formPet.cor.trim();
+    const porte = formPet.porte;
+    const observacoes = formPet.observacoes.trim();
+    const pesoDigitado = formPet.peso.trim().replace(",", ".");
+    const peso = Number(pesoDigitado);
 
-    if (!nome || !tipo) {
-      toast.error("Preencha nome e tipo do pet.");
+    if (!nome || !especie || !raca || !sexo || !dataNascimento || !cor || !porte || !pesoDigitado) {
+      toast.error("Preencha todos os campos obrigatorios do pet.");
       return;
     }
 
-    const petPayload = {
+    if (!Number.isFinite(peso) || peso <= 0) {
+      toast.error("Peso deve ser maior que zero.");
+      return;
+    }
+
+    const payload = {
       nome,
-      tipo,
-      raca: formPet.raca.trim(),
-      idade: formPet.idade.trim(),
-      foto: PET_EMOJI_MAP[tipo] ?? "🐾",
+      especie,
+      raca,
+      sexo,
+      dataNascimento,
+      peso,
+      cor,
+      porte,
+      observacoes,
+      clienteId: cliente.id,
     };
 
-    if (editingPetId) {
-      setPets((current) =>
-        current.map((pet) =>
-          pet.id === editingPetId
-            ? {
-              ...pet,
-              ...petPayload,
-            }
-            : pet
-        )
-      );
+    try {
+      if (editingPetId) {
+        const response = await putPet(editingPetId, payload);
 
-      setConsultas((current) =>
-        current.map((consulta) =>
-          consulta.petId === editingPetId
-            ? {
-              ...consulta,
-              petNome: petPayload.nome,
-            }
-            : consulta
-        )
-      );
+        if (!response.ok) {
+          const message = await getResponseMessage(response, "Nao foi possivel atualizar o pet.");
+          throw new Error(message);
+        }
 
+        const petAtualizado = normalizePet((await response.json()) as Pet);
+
+        setPets((current) => current.map((pet) => (pet.id === editingPetId ? petAtualizado : pet)));
+        setConsultas((current) =>
+          current.map((consulta) =>
+            consulta.petId === editingPetId
+              ? {
+                ...consulta,
+                petNome: petAtualizado.nome,
+              }
+              : consulta
+          )
+        );
+
+        closePetModal();
+        setActiveMenu("pets");
+        toast.success(`${petAtualizado.nome} atualizado com sucesso.`);
+        return;
+      }
+
+      const response = await postPet(payload);
+
+      if (!response.ok) {
+        const message = await getResponseMessage(response, "Nao foi possivel cadastrar o pet.");
+        throw new Error(message);
+      }
+
+      const novoPet = normalizePet((await response.json()) as Pet);
+      setPets((current) => [novoPet, ...current]);
       closePetModal();
       setActiveMenu("pets");
-      toast.success(`${petPayload.nome} atualizado com sucesso.`);
-      return;
+      toast.success(`${novoPet.nome} cadastrado com sucesso.`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Nao foi possivel salvar o pet.";
+      toast.error(message);
     }
-
-    const novoPet: Pet = {
-      id: getNextId(pets),
-      ...petPayload,
-    };
-
-    setPets((current) => [...current, novoPet]);
-    closePetModal();
-    setActiveMenu("pets");
-    toast.success(`${novoPet.nome} cadastrado com sucesso.`);
   };
 
   const handleEditarPet = (pet: Pet) => {
     setFormPet({
       nome: pet.nome,
-      tipo: pet.tipo,
+      especie: pet.especie,
       raca: pet.raca,
-      idade: pet.idade,
+      sexo: pet.sexo,
+      dataNascimento: pet.dataNascimento,
+      peso: String(pet.peso),
+      cor: pet.cor,
+      porte: pet.porte,
+      observacoes: pet.observacoes,
     });
     setEditingPetId(pet.id);
     setActiveMenu("pets");
     setShowPetModal(true);
   };
 
-  const handleExcluirPet = (id: number) => {
+  const handleExcluirPet = async (id: number) => {
     const pet = pets.find((item) => item.id === id);
     if (!pet) {
       return;
@@ -395,15 +478,27 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
       return;
     }
 
-    setPets((current) => current.filter((item) => item.id !== id));
-    setConsultas((current) => current.filter((consulta) => consulta.petId !== id));
-    setFormConsulta((current) => (current.petId === String(id) ? { ...current, petId: "" } : current));
+    try {
+      const response = await deletePet(id, cliente.id);
 
-    if (editingPetId === id) {
-      closePetModal();
+      if (!response.ok) {
+        const message = await getResponseMessage(response, "Nao foi possivel excluir o pet.");
+        throw new Error(message);
+      }
+
+      setPets((current) => current.filter((item) => item.id !== id));
+      setConsultas((current) => current.filter((consulta) => consulta.petId !== id));
+      setFormConsulta((current) => (current.petId === String(id) ? { ...current, petId: "" } : current));
+
+      if (editingPetId === id) {
+        closePetModal();
+      }
+
+      toast.success(`${pet.nome} excluido com sucesso.`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Nao foi possivel excluir o pet.";
+      toast.error(message);
     }
-
-    toast.success(`${pet.nome} excluido com sucesso.`);
   };
 
   const handleSalvarPerfil = async () => {

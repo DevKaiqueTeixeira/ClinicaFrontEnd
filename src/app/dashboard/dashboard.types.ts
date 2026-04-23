@@ -11,10 +11,15 @@ export type ConsultaStatus = "confirmado" | "pendente" | "concluido";
 export type Pet = {
   id: number;
   nome: string;
-  tipo: string;
+  especie: string;
   raca: string;
-  idade: string;
-  foto: string;
+  sexo: string;
+  dataNascimento: string;
+  peso: number;
+  cor: string;
+  porte: string;
+  observacoes: string;
+  clienteId: number;
 };
 
 export type Consulta = {
@@ -58,7 +63,12 @@ export type ConsultaForm = {
 
 export type PetForm = {
   nome: string;
-  tipo: string;
+  especie: string;
   raca: string;
-  idade: string;
+  sexo: string;
+  dataNascimento: string;
+  peso: string;
+  cor: string;
+  porte: string;
+  observacoes: string;
 };

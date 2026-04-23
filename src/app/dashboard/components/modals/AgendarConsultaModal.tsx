@@ -37,7 +37,7 @@ export default function AgendarConsultaModal({
               <option value="">Selecione um pet</option>
               {pets.map((pet) => (
                 <option key={pet.id} value={pet.id}>
-                  {pet.nome} ({pet.tipo})
+                  {pet.nome} ({pet.especie})
                 </option>
               ))}
             </select>
