@@ -183,6 +183,15 @@ export default function LoginCliente() {
           </Link>
         </p>
       </AuthSplitLayout>
+
+      <Link
+        href="/medico"
+        aria-label="Acessar tela do medico"
+        title="Acessar tela do medico"
+        className="fixed left-4 bottom-4 z-50 inline-flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300/85 bg-white/90 text-zinc-700 shadow-[0_10px_22px_rgba(0,0,0,0.2)] backdrop-blur transition hover:-translate-y-0.5 hover:border-orange-300 hover:text-orange-600 sm:left-6 sm:bottom-6"
+      >
+        <Stethoscope size={18} />
+      </Link>
     </>
   );
 }

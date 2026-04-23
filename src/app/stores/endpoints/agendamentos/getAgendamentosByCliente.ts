@@ -18,3 +18,10 @@ export async function getAgendamentosByCliente(clienteId: number): Promise<Respo
     cache: "no-store",
   });
 }
+
+export async function getAgendamentos(): Promise<Response> {
+  return fetch(buildApiUrl(`/agendamentos?t=${Date.now()}`), {
+    credentials: "include",
+    cache: "no-store",
+  });
+}
