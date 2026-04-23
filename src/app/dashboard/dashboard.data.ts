@@ -33,41 +33,7 @@ export const EMPTY_PET_FORM: PetForm = {
   observacoes: "",
 };
 
-export const initialConsultas: Consulta[] = [
-  {
-    id: 1,
-    petId: 1,
-    petNome: "Rex",
-    tipo: "Consulta de Rotina",
-    data: "2026-04-15",
-    hora: "14:30",
-    veterinario: "Dr. Carlos Silva",
-    status: "confirmado",
-    observacoes: "Checkup geral",
-  },
-  {
-    id: 2,
-    petId: 2,
-    petNome: "Mimi",
-    tipo: "Vacinacao",
-    data: "2026-04-18",
-    hora: "10:00",
-    veterinario: "Dra. Ana Santos",
-    status: "pendente",
-    observacoes: "Vacina antirrabica",
-  },
-  {
-    id: 3,
-    petId: 1,
-    petNome: "Rex",
-    tipo: "Exame",
-    data: "2026-04-10",
-    hora: "16:00",
-    veterinario: "Dr. Pedro Costa",
-    status: "concluido",
-    observacoes: "Exame de sangue sem alteracoes",
-  },
-];
+export const initialConsultas: Consulta[] = [];
 
 export function getNextId<T extends { id: number }>(items: T[]): number {
   return items.reduce((max, item) => (item.id > max ? item.id : max), 0) + 1;

@@ -354,7 +354,7 @@ export function ConsultasSection({
 
               {consulta.observacoes ? <p className="text-xs text-zinc-600">{consulta.observacoes}</p> : null}
 
-              {consulta.status !== "concluido" ? (
+              {consulta.status === "pendente" || consulta.status === "confirmado" ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     type="button"

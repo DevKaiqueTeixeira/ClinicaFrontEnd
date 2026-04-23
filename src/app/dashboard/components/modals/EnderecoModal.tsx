@@ -6,6 +6,7 @@ import { ModalShell } from "../DashboardUI";
 export default function EnderecoModal({
   open,
   enderecoSlotAtual,
+  isSubmitting,
   enderecoDraft,
   setEnderecoDraft,
   onClose,
@@ -13,6 +14,7 @@ export default function EnderecoModal({
 }: {
   open: boolean;
   enderecoSlotAtual: 0 | 1;
+  isSubmitting: boolean;
   enderecoDraft: Endereco;
   setEnderecoDraft: Dispatch<SetStateAction<Endereco>>;
   onClose: () => void;
@@ -176,9 +178,15 @@ export default function EnderecoModal({
             <button
               type="button"
               onClick={onSubmit}
-              className="w-full rounded-xl bg-linear-to-r from-orange-500 to-orange-600 px-3 py-2 text-sm font-semibold text-white transition hover:from-orange-600 hover:to-orange-700"
+              disabled={isSubmitting}
+              className={[
+                "w-full rounded-xl px-3 py-2 text-sm font-semibold text-white transition",
+                isSubmitting
+                  ? "cursor-not-allowed bg-zinc-400"
+                  : "bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700",
+              ].join(" ")}
             >
-              Salvar
+              {isSubmitting ? "Salvando..." : "Salvar"}
             </button>
           </div>
         </ModalShell>

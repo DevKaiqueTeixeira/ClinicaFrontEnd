@@ -6,6 +6,7 @@ import { ModalShell } from "../DashboardUI";
 export default function PetModal({
   open,
   isEditing,
+  isSubmitting,
   formPet,
   setFormPet,
   onClose,
@@ -13,6 +14,7 @@ export default function PetModal({
 }: {
   open: boolean;
   isEditing: boolean;
+  isSubmitting: boolean;
   formPet: PetForm;
   setFormPet: Dispatch<SetStateAction<PetForm>>;
   onClose: () => void;
@@ -177,9 +179,15 @@ export default function PetModal({
             <button
               type="button"
               onClick={onSubmit}
-              className="w-full rounded-xl bg-linear-to-r from-orange-500 to-orange-600 px-3 py-2 text-sm font-semibold text-white transition hover:from-orange-600 hover:to-orange-700"
+              disabled={isSubmitting}
+              className={[
+                "w-full rounded-xl px-3 py-2 text-sm font-semibold text-white transition",
+                isSubmitting
+                  ? "cursor-not-allowed bg-zinc-400"
+                  : "bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700",
+              ].join(" ")}
             >
-              {isEditing ? "Atualizar" : "Cadastrar"}
+              {isSubmitting ? "Salvando..." : isEditing ? "Atualizar" : "Cadastrar"}
             </button>
           </div>
         </ModalShell>

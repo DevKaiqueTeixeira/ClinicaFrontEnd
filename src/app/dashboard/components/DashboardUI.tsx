@@ -59,6 +59,14 @@ export function StatusBadge({ status }: { status: ConsultaStatus }) {
     );
   }
 
+  if (status === "cancelado") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-1 text-[11px] font-semibold text-red-700">
+        <XCircle size={12} /> Cancelado
+      </span>
+    );
+  }
+
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-orange-700 px-2 py-1 text-[11px] font-semibold text-white">
       <XCircle size={12} /> Concluido

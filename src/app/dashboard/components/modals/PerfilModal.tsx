@@ -16,6 +16,7 @@ export default function PerfilModal({
   formPerfil,
   setFormPerfil,
   enderecos,
+  isEnderecoBusy,
   onOpenEndereco,
   onRemoveEndereco,
   onClose,
@@ -25,6 +26,7 @@ export default function PerfilModal({
   formPerfil: PerfilForm;
   setFormPerfil: Dispatch<SetStateAction<PerfilForm>>;
   enderecos: [Endereco | null, Endereco | null];
+  isEnderecoBusy: boolean;
   onOpenEndereco: (slot: 0 | 1) => void;
   onRemoveEndereco: (slot: 0 | 1) => void;
   onClose: () => void;
@@ -107,14 +109,16 @@ export default function PerfilModal({
                           <button
                             type="button"
                             onClick={() => onOpenEndereco(slot)}
-                            className="rounded-md bg-zinc-200 px-2 py-1 font-medium text-zinc-700 transition hover:bg-zinc-300"
+                            disabled={isEnderecoBusy}
+                            className="rounded-md bg-zinc-200 px-2 py-1 font-medium text-zinc-700 transition hover:bg-zinc-300 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Editar
                           </button>
                           <button
                             type="button"
                             onClick={() => onRemoveEndereco(slot)}
-                            className="rounded-md bg-orange-100 px-2 py-1 font-medium text-orange-700 transition hover:bg-orange-200"
+                            disabled={isEnderecoBusy}
+                            className="rounded-md bg-orange-100 px-2 py-1 font-medium text-orange-700 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Remover
                           </button>
@@ -124,7 +128,8 @@ export default function PerfilModal({
                       <button
                         type="button"
                         onClick={() => onOpenEndereco(slot)}
-                        className="flex w-full items-center justify-center gap-1 rounded-md border border-zinc-200 px-2 py-2 font-medium text-zinc-600 transition hover:border-orange-300 hover:text-orange-700"
+                        disabled={isEnderecoBusy}
+                        className="flex w-full items-center justify-center gap-1 rounded-md border border-zinc-200 px-2 py-2 font-medium text-zinc-600 transition hover:border-orange-300 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Plus size={13} />
                         Adicionar endereco {slot + 1}

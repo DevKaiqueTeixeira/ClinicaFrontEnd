@@ -3,10 +3,23 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast, Toaster } from "sonner";
 import { postAuthLogout } from "@/app/stores/endpoints/auth/postAuthLogout";
-import { postEndereco } from "@/app/stores/endpoints/enderecos/postEndereco";
+import { deleteEndereco } from "@/app/stores/endpoints/enderecos/deleteEndereco";
+import { getEnderecosByCliente } from "@/app/stores/endpoints/enderecos/getEnderecosByCliente";
+import {
+  postEndereco,
+  type EnderecoApiResponse,
+} from "@/app/stores/endpoints/enderecos/postEndereco";
+import { putEndereco } from "@/app/stores/endpoints/enderecos/putEndereco";
+import { deleteAgendamento } from "@/app/stores/endpoints/agendamentos/deleteAgendamento";
+import {
+  getAgendamentosByCliente,
+  type AgendamentoApiResponse,
+} from "@/app/stores/endpoints/agendamentos/getAgendamentosByCliente";
+import { postAgendamento } from "@/app/stores/endpoints/agendamentos/postAgendamento";
+import { putAgendamento } from "@/app/stores/endpoints/agendamentos/putAgendamento";
 import { deletePet } from "@/app/stores/endpoints/pets/deletePet";
 import { getPetsByCliente } from "@/app/stores/endpoints/pets/getPetsByCliente";
 import { postPet } from "@/app/stores/endpoints/pets/postPet";
@@ -16,13 +29,13 @@ import {
   EMPTY_CONSULTA_FORM,
   EMPTY_ENDERECO,
   EMPTY_PET_FORM,
-  getNextId,
   initialConsultas,
 } from "./dashboard.data";
 import type {
   Cliente,
   Consulta,
   ConsultaForm,
+  ConsultaStatus,
   Endereco,
   PerfilForm,
   Pet,
@@ -149,6 +162,72 @@ async function getResponseMessage(response: Response, fallbackMessage: string): 
   return message || fallbackMessage;
 }
 
+function normalizeHora(value: unknown): string {
+  if (typeof value !== "string" || !value.trim()) {
+    return "";
+  }
+
+  const normalized = value.trim();
+  return normalized.length >= 5 ? normalized.slice(0, 5) : normalized;
+}
+
+function normalizeConsultaStatus(value: unknown): ConsultaStatus {
+  if (typeof value !== "string") {
+    return "pendente";
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (
+    normalized === "pendente" ||
+    normalized === "confirmado" ||
+    normalized === "concluido" ||
+    normalized === "cancelado"
+  ) {
+    return normalized;
+  }
+
+  return "pendente";
+}
+
+function mapAgendamentoApiToConsulta(
+  agendamento: AgendamentoApiResponse,
+  petNameById: Map<number, string>
+): Consulta {
+  return {
+    id: agendamento.id,
+    petId: agendamento.petId,
+    petNome: petNameById.get(agendamento.petId) ?? `Pet #${agendamento.petId}`,
+    tipo: agendamento.tipo,
+    data: agendamento.data,
+    hora: normalizeHora(agendamento.hora),
+    veterinario: normalizeText(agendamento.veterinario) || "A definir",
+    status: normalizeConsultaStatus(agendamento.status),
+    observacoes: normalizeText(agendamento.observacoes),
+  };
+}
+
+function mapEnderecoApiToEndereco(endereco: EnderecoApiResponse): Endereco {
+  return {
+    id: endereco.id,
+    cep: normalizeText(endereco.cep),
+    logradouro: normalizeText(endereco.logradouro),
+    numero: normalizeText(endereco.numero),
+    complemento: normalizeText(endereco.complemento),
+    bairro: normalizeText(endereco.bairro),
+    cidade: normalizeText(endereco.cidade),
+    estado: normalizeText(endereco.uf),
+    pais: normalizeText(endereco.pais),
+    pontoReferencia: normalizeText(endereco.pontoReferencia),
+    tipo: normalizeText(endereco.tipoEndereco),
+  };
+}
+
+function toEnderecoSlots(enderecosApi: EnderecoApiResponse[]): [Endereco | null, Endereco | null] {
+  const mapped = enderecosApi.map(mapEnderecoApiToEndereco).slice(0, 2);
+  return [mapped[0] ?? null, mapped[1] ?? null];
+}
+
 export default function DashboardClient({ initialCliente }: { initialCliente: Cliente }) {
   const router = useRouter();
   const initialClienteNormalizado = normalizeCliente(initialCliente);
@@ -179,6 +258,14 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
   const [enderecos, setEnderecos] = useState<[Endereco | null, Endereco | null]>([null, null]);
   const [enderecoSlotAtual, setEnderecoSlotAtual] = useState<0 | 1>(0);
   const [enderecoDraft, setEnderecoDraft] = useState<Endereco>({ ...EMPTY_ENDERECO });
+  const [isSavingPet, setIsSavingPet] = useState(false);
+  const [isSavingConsulta, setIsSavingConsulta] = useState(false);
+  const [isSavingEndereco, setIsSavingEndereco] = useState(false);
+  const [isRemovingEndereco, setIsRemovingEndereco] = useState(false);
+  const isSavingPetRef = useRef(false);
+  const isSavingConsultaRef = useRef(false);
+  const isSavingEnderecoRef = useRef(false);
+  const isRemovingEnderecoRef = useRef(false);
 
   useEffect(() => {
     const override = loadClienteProfileOverride(initialClienteNormalizado.id);
@@ -197,7 +284,9 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
   useEffect(() => {
     let active = true;
 
-    const carregarPets = async () => {
+    const carregarDados = async () => {
+      let petsNormalizados: Pet[] = [];
+
       try {
         const response = await getPetsByCliente(initialClienteNormalizado.id);
 
@@ -207,12 +296,13 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
         }
 
         const petsResponse = (await response.json()) as Pet[];
+        petsNormalizados = petsResponse.map(normalizePet);
 
         if (!active) {
           return;
         }
 
-        setPets(petsResponse.map(normalizePet));
+        setPets(petsNormalizados);
       } catch (error: unknown) {
         if (!active) {
           return;
@@ -221,9 +311,61 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
         const message = error instanceof Error ? error.message : "Nao foi possivel carregar os pets.";
         toast.error(message);
       }
+
+      try {
+        const response = await getAgendamentosByCliente(initialClienteNormalizado.id);
+
+        if (!response.ok) {
+          const message = await getResponseMessage(response, "Nao foi possivel carregar as consultas.");
+          throw new Error(message);
+        }
+
+        const agendamentosResponse = (await response.json()) as AgendamentoApiResponse[];
+
+        if (!active) {
+          return;
+        }
+
+        const petNameById = new Map<number, string>(petsNormalizados.map((pet) => [pet.id, pet.nome]));
+
+        setConsultas(
+          agendamentosResponse.map((agendamento) => mapAgendamentoApiToConsulta(agendamento, petNameById))
+        );
+      } catch (error: unknown) {
+        if (!active) {
+          return;
+        }
+
+        const message = error instanceof Error ? error.message : "Nao foi possivel carregar as consultas.";
+        toast.error(message);
+      }
+
+      try {
+        const response = await getEnderecosByCliente(initialClienteNormalizado.id);
+
+        if (!response.ok) {
+          const message = await getResponseMessage(response, "Nao foi possivel carregar os enderecos.");
+          throw new Error(message);
+        }
+
+        const enderecosResponse = (await response.json()) as EnderecoApiResponse[];
+
+        if (!active) {
+          return;
+        }
+
+        setEnderecos(toEnderecoSlots(enderecosResponse));
+      } catch (error: unknown) {
+        if (!active) {
+          return;
+        }
+
+        const message = error instanceof Error ? error.message : "Nao foi possivel carregar os enderecos.";
+        toast.error(message);
+      }
     };
 
-    void carregarPets();
+    void carregarDados();
 
     return () => {
       active = false;
@@ -303,7 +445,11 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
     }
   };
 
-  const handleAgendarConsulta = () => {
+  const handleAgendarConsulta = async () => {
+    if (isSavingConsultaRef.current) {
+      return;
+    }
+
     if (!formConsulta.petId || !formConsulta.tipo || !formConsulta.data || !formConsulta.hora) {
       toast.error("Preencha os campos obrigatorios da consulta.");
       return;
@@ -315,41 +461,64 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
       return;
     }
 
-    if (editingConsultaId) {
-      setConsultas((current) =>
-        current.map((consulta) =>
-          consulta.id === editingConsultaId
-            ? {
-              ...consulta,
-              petId: pet.id,
-              petNome: pet.nome,
-              tipo: formConsulta.tipo,
-              data: formConsulta.data,
-              hora: formConsulta.hora,
-              observacoes: formConsulta.observacoes,
-            }
-            : consulta
-        )
-      );
-      toast.success("Consulta atualizada com sucesso.");
-    } else {
-      const novaConsulta: Consulta = {
-        id: getNextId(consultas),
-        petId: pet.id,
-        petNome: pet.nome,
-        tipo: formConsulta.tipo,
-        data: formConsulta.data,
-        hora: formConsulta.hora,
-        veterinario: "A definir",
-        status: "pendente",
-        observacoes: formConsulta.observacoes,
-      };
+    const petNameById = new Map<number, string>(pets.map((item) => [item.id, item.nome]));
+    const consultaEmEdicao = editingConsultaId !== null
+      ? consultas.find((consulta) => consulta.id === editingConsultaId)
+      : null;
 
-      setConsultas((current) => [novaConsulta, ...current]);
-      toast.success("Consulta agendada com sucesso.");
+    const payload = {
+      petId: pet.id,
+      clienteId: cliente.id,
+      tipo: formConsulta.tipo,
+      data: formConsulta.data,
+      hora: formConsulta.hora,
+      observacoes: formConsulta.observacoes.trim(),
+      veterinario: consultaEmEdicao?.veterinario ?? "A definir",
+      status: consultaEmEdicao?.status ?? "pendente",
+    };
+
+    isSavingConsultaRef.current = true;
+    setIsSavingConsulta(true);
+
+    try {
+      if (editingConsultaId !== null) {
+        const response = await putAgendamento(editingConsultaId, payload);
+
+        if (!response.ok) {
+          const message = await getResponseMessage(response, "Nao foi possivel atualizar a consulta.");
+          throw new Error(message);
+        }
+
+        const agendamentoAtualizado = (await response.json()) as AgendamentoApiResponse;
+        const consultaAtualizada = mapAgendamentoApiToConsulta(agendamentoAtualizado, petNameById);
+
+        setConsultas((current) =>
+          current.map((consulta) => (consulta.id === editingConsultaId ? consultaAtualizada : consulta))
+        );
+        toast.success("Consulta atualizada com sucesso.");
+      } else {
+        const response = await postAgendamento(payload);
+
+        if (!response.ok) {
+          const message = await getResponseMessage(response, "Nao foi possivel agendar a consulta.");
+          throw new Error(message);
+        }
+
+        const novoAgendamento = (await response.json()) as AgendamentoApiResponse;
+        const novaConsulta = mapAgendamentoApiToConsulta(novoAgendamento, petNameById);
+
+        setConsultas((current) => [novaConsulta, ...current]);
+        toast.success("Consulta agendada com sucesso.");
+      }
+
+      closeAgendarModal();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Nao foi possivel salvar a consulta.";
+      toast.error(message);
+    } finally {
+      isSavingConsultaRef.current = false;
+      setIsSavingConsulta(false);
     }
-
-    closeAgendarModal();
   };
 
   const handleEditarConsulta = (consulta: Consulta) => {
@@ -364,12 +533,38 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
     setShowAgendarModal(true);
   };
 
-  const handleCancelarConsulta = (id: number) => {
-    setConsultas((current) => current.filter((consulta) => consulta.id !== id));
-    toast.success("Consulta cancelada.");
+  const handleCancelarConsulta = async (id: number) => {
+    const consulta = consultas.find((item) => item.id === id);
+    if (!consulta) {
+      return;
+    }
+
+    try {
+      const response = await deleteAgendamento(id, cliente.id);
+
+      if (!response.ok) {
+        const message = await getResponseMessage(response, "Nao foi possivel cancelar a consulta.");
+        throw new Error(message);
+      }
+
+      setConsultas((current) => current.filter((item) => item.id !== id));
+
+      if (editingConsultaId === id) {
+        closeAgendarModal();
+      }
+
+      toast.success(`Consulta de ${consulta.petNome} cancelada.`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Nao foi possivel cancelar a consulta.";
+      toast.error(message);
+    }
   };
 
   const handleSalvarPet = async () => {
+    if (isSavingPetRef.current) {
+      return;
+    }
+
     const nome = formPet.nome.trim();
     const especie = formPet.especie;
     const raca = formPet.raca.trim();
@@ -403,6 +598,9 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
       observacoes,
       clienteId: cliente.id,
     };
+
+    isSavingPetRef.current = true;
+    setIsSavingPet(true);
 
     try {
       if (editingPetId) {
@@ -448,6 +646,9 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Nao foi possivel salvar o pet.";
       toast.error(message);
+    } finally {
+      isSavingPetRef.current = false;
+      setIsSavingPet(false);
     }
   };
 
@@ -556,6 +757,10 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
   };
 
   const salvarEndereco = async () => {
+    if (isSavingEnderecoRef.current) {
+      return;
+    }
+
     if (
       !enderecoDraft.cep ||
       !enderecoDraft.logradouro ||
@@ -584,35 +789,87 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
       clienteId: cliente.id,
     };
 
+    isSavingEnderecoRef.current = true;
+    setIsSavingEndereco(true);
+
     try {
-      const response = await postEndereco(payload);
+      const response = enderecoDraft.id
+        ? await putEndereco(enderecoDraft.id, payload)
+        : await postEndereco(payload);
 
       if (!response.ok) {
-        const message = await response.text();
-        throw new Error(message || "Nao foi possivel salvar o endereco.");
+        const message = await getResponseMessage(response, "Nao foi possivel salvar o endereco.");
+        throw new Error(message);
       }
+
+      const enderecoSalvo = mapEnderecoApiToEndereco((await response.json()) as EnderecoApiResponse);
 
       setEnderecos((current) => {
         const updated = [...current] as [Endereco | null, Endereco | null];
-        updated[enderecoSlotAtual] = { ...enderecoDraft };
+        updated[enderecoSlotAtual] = enderecoSalvo;
         return updated;
       });
 
       closeEnderecoModal();
-      toast.success(`Endereco ${enderecoSlotAtual + 1} salvo.`);
+      toast.success(
+        enderecoDraft.id
+          ? `Endereco ${enderecoSlotAtual + 1} atualizado.`
+          : `Endereco ${enderecoSlotAtual + 1} salvo.`
+      );
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Nao foi possivel salvar o endereco.";
       toast.error(message);
+    } finally {
+      isSavingEnderecoRef.current = false;
+      setIsSavingEndereco(false);
     }
   };
 
-  const removerEndereco = (slot: 0 | 1) => {
-    setEnderecos((current) => {
-      const updated = [...current] as [Endereco | null, Endereco | null];
-      updated[slot] = null;
-      return updated;
-    });
-    toast.success(`Endereco ${slot + 1} removido.`);
+  const removerEndereco = async (slot: 0 | 1) => {
+    if (isRemovingEnderecoRef.current) {
+      return;
+    }
+
+    const endereco = enderecos[slot];
+    if (!endereco) {
+      return;
+    }
+
+    if (!window.confirm(`Deseja remover o endereco ${slot + 1}?`)) {
+      return;
+    }
+
+    isRemovingEnderecoRef.current = true;
+    setIsRemovingEndereco(true);
+
+    try {
+      if (endereco.id) {
+        const response = await deleteEndereco(endereco.id, cliente.id);
+
+        if (!response.ok) {
+          const message = await getResponseMessage(response, "Nao foi possivel remover o endereco.");
+          throw new Error(message);
+        }
+      }
+
+      setEnderecos((current) => {
+        const updated = [...current] as [Endereco | null, Endereco | null];
+        updated[slot] = null;
+        return updated;
+      });
+
+      if (showEnderecoModal && enderecoSlotAtual === slot) {
+        closeEnderecoModal();
+      }
+
+      toast.success(`Endereco ${slot + 1} removido.`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Nao foi possivel remover o endereco.";
+      toast.error(message);
+    } finally {
+      isRemovingEnderecoRef.current = false;
+      setIsRemovingEndereco(false);
+    }
   };
 
   return (
@@ -714,6 +971,7 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
         <AgendarConsultaModal
           open={showAgendarModal}
           editingConsultaId={editingConsultaId}
+          isSubmitting={isSavingConsulta}
           formConsulta={formConsulta}
           pets={pets}
           setFormConsulta={setFormConsulta}
@@ -724,6 +982,7 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
         <PetModal
           open={showPetModal}
           isEditing={editingPetId !== null}
+          isSubmitting={isSavingPet}
           formPet={formPet}
           setFormPet={setFormPet}
           onClose={closePetModal}
@@ -735,6 +994,7 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
           formPerfil={formPerfil}
           setFormPerfil={setFormPerfil}
           enderecos={enderecos}
+          isEnderecoBusy={isSavingEndereco || isRemovingEndereco}
           onOpenEndereco={openEnderecoModal}
           onRemoveEndereco={removerEndereco}
           onClose={() => setShowPerfilModal(false)}
@@ -744,6 +1004,7 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
         <EnderecoModal
           open={showEnderecoModal}
           enderecoSlotAtual={enderecoSlotAtual}
+          isSubmitting={isSavingEndereco}
           enderecoDraft={enderecoDraft}
           setEnderecoDraft={setEnderecoDraft}
           onClose={closeEnderecoModal}

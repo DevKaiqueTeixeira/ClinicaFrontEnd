@@ -6,7 +6,7 @@ export type Cliente = {
   telefone: string;
 };
 
-export type ConsultaStatus = "confirmado" | "pendente" | "concluido";
+export type ConsultaStatus = "confirmado" | "pendente" | "concluido" | "cancelado";
 
 export type Pet = {
   id: number;
@@ -35,6 +35,7 @@ export type Consulta = {
 };
 
 export type Endereco = {
+  id?: number;
   cep: string;
   logradouro: string;
   numero: string;
