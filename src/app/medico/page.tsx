@@ -9,6 +9,10 @@ import {
   type AgendamentoApiResponse,
 } from "@/app/stores/endpoints/agendamentos/getAgendamentosByCliente";
 import { putStatusAgendamento } from "@/app/stores/endpoints/agendamentos/putStatusAgendamento";
+import {
+  postEnviarReceitaEmail,
+  type EnviarReceitaEmailResponse,
+} from "@/app/stores/endpoints/receitas/postEnviarReceitaEmail";
 
 type ConsultaStatus = "pendente" | "confirmado" | "concluido" | "cancelado";
 
@@ -86,6 +90,7 @@ export default function MedicoPage() {
   const [statusDraft, setStatusDraft] = useState<Record<number, ConsultaStatus>>({});
   const [receitaDraft, setReceitaDraft] = useState<Record<number, string>>({});
   const [savingStatus, setSavingStatus] = useState<Record<number, boolean>>({});
+  const [sendingReceita, setSendingReceita] = useState<Record<number, boolean>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -170,7 +175,11 @@ export default function MedicoPage() {
     }
   };
 
-  const handleEnviarEmailPlaceholder = (agendamentoId: number) => {
+  const handleEnviarEmail = async (agendamentoId: number) => {
+    if (sendingReceita[agendamentoId]) {
+      return;
+    }
+
     const texto = (receitaDraft[agendamentoId] ?? "").trim();
 
     if (!texto) {
@@ -178,7 +187,51 @@ export default function MedicoPage() {
       return;
     }
 
-    toast.info("Botao pronto. O envio por email sera implementado na proxima etapa.");
+    setSendingReceita((current) => ({ ...current, [agendamentoId]: true }));
+
+    try {
+      const response = await postEnviarReceitaEmail({
+        agendamentoId,
+        texto,
+      });
+
+      if (!response.ok) {
+        const message = (await response.text()).trim();
+        throw new Error(message || "Nao foi possivel enviar a receita por email.");
+      }
+
+      const data = (await response.json()) as EnviarReceitaEmailResponse;
+      const statusAtualizado = normalizeStatus(data.agendamento.status);
+
+      setAgendamentos((current) =>
+        current.map((agendamento) =>
+          agendamento.id === agendamentoId
+            ? {
+              ...agendamento,
+              ...data.agendamento,
+              status: statusAtualizado,
+            }
+            : agendamento
+        )
+      );
+
+      setStatusDraft((current) => ({
+        ...current,
+        [agendamentoId]: statusAtualizado,
+      }));
+
+      setReceitaDraft((current) => ({
+        ...current,
+        [agendamentoId]: "",
+      }));
+
+      toast.success(`Receita enviada para ${data.receita.emailDestino}. Consulta concluida.`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Nao foi possivel enviar a receita por email.";
+      toast.error(message);
+    } finally {
+      setSendingReceita((current) => ({ ...current, [agendamentoId]: false }));
+    }
   };
 
   return (
@@ -220,12 +273,20 @@ export default function MedicoPage() {
           <section className="space-y-4">
             {agendamentos.map((agendamento) => {
               const currentStatus = statusDraft[agendamento.id] ?? normalizeStatus(agendamento.status);
+              const persistedStatus = normalizeStatus(agendamento.status);
               const isSaving = savingStatus[agendamento.id] ?? false;
+              const isSending = sendingReceita[agendamento.id] ?? false;
+              const isConcluida = persistedStatus === "concluido";
 
               return (
                 <article
                   key={agendamento.id}
-                  className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-[0_12px_30px_rgba(0,0,0,0.07)]"
+                  className={[
+                    "rounded-3xl border bg-white p-5 transition-shadow",
+                    isConcluida
+                      ? "border-emerald-200 shadow-[0_14px_30px_rgba(16,185,129,0.25)]"
+                      : "border-zinc-200 shadow-[0_12px_30px_rgba(0,0,0,0.07)]",
+                  ].join(" ")}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -238,10 +299,10 @@ export default function MedicoPage() {
                     <span
                       className={[
                         "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
-                        statusPillClass(currentStatus),
+                        statusPillClass(persistedStatus),
                       ].join(" ")}
                     >
-                      {statusLabel(currentStatus)}
+                      {statusLabel(persistedStatus)}
                     </span>
                   </div>
 
@@ -323,11 +384,17 @@ export default function MedicoPage() {
                     <div className="mt-3 flex justify-end">
                       <button
                         type="button"
-                        onClick={() => handleEnviarEmailPlaceholder(agendamento.id)}
-                        className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-orange-300 hover:text-orange-700"
+                        onClick={() => handleEnviarEmail(agendamento.id)}
+                        disabled={isSending}
+                        className={[
+                          "inline-flex items-center gap-2 rounded-xl border bg-white px-3 py-2 text-sm font-semibold transition",
+                          isSending
+                            ? "cursor-not-allowed border-zinc-300 text-zinc-400"
+                            : "border-zinc-300 text-zinc-700 hover:border-orange-300 hover:text-orange-700",
+                        ].join(" ")}
                       >
                         <Mail size={15} />
-                        Enviar via email
+                        {isSending ? "Enviando..." : "Enviar via email"}
                         <Send size={15} />
                       </button>
                     </div>

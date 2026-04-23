@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Mail, PawPrint, ShieldCheck, Stethoscope } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast, Toaster } from "sonner";
 import { z } from "zod";
@@ -26,7 +26,6 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginCliente() {
   const router = useRouter();
   const { login: fazerLogin, loading } = useLoginApi();
-  const [rememberMe, setRememberMe] = useState(false);
 
   const {
     control,
@@ -129,16 +128,7 @@ export default function LoginCliente() {
             )}
           />
 
-          <div className="flex items-center justify-between text-xs text-zinc-600">
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(event) => setRememberMe(event.target.checked)}
-                className="h-4 w-4 rounded border-zinc-300 text-orange-600"
-              />
-              <span>Lembrar-me</span>
-            </label>
+          <div className="flex justify-end text-xs text-zinc-600">
             <button
               type="button"
               onClick={() => toast.info("Funcionalidade em breve")}
@@ -188,7 +178,7 @@ export default function LoginCliente() {
         href="/medico"
         aria-label="Acessar tela do medico"
         title="Acessar tela do medico"
-        className="fixed left-4 bottom-4 z-50 inline-flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300/85 bg-white/90 text-zinc-700 shadow-[0_10px_22px_rgba(0,0,0,0.2)] backdrop-blur transition hover:-translate-y-0.5 hover:border-orange-300 hover:text-orange-600 sm:left-6 sm:bottom-6"
+        className="fixed right-4 bottom-16 z-50 inline-flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300/85 bg-white/90 text-zinc-700 shadow-[0_10px_22px_rgba(0,0,0,0.2)] backdrop-blur transition hover:-translate-y-0.5 hover:border-orange-300 hover:text-orange-600 sm:right-6 sm:bottom-20"
       >
         <Stethoscope size={18} />
       </Link>

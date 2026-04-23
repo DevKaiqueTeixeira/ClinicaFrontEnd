@@ -892,7 +892,6 @@ export default function DashboardClient({ initialCliente }: { initialCliente: Cl
 
         <div className="flex flex-1 flex-col lg:ml-0">
           <DashboardHeader
-            consultasPendentes={consultasPendentes}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 

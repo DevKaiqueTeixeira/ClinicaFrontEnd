@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import {
   AlertCircle,
-  Bell,
   Calendar,
   CheckCircle,
   Clock,
@@ -155,10 +154,8 @@ export function DashboardSidebar({
 }
 
 export function DashboardHeader({
-  consultasPendentes,
   onOpenSidebar,
 }: {
-  consultasPendentes: number;
   onOpenSidebar: () => void;
 }) {
   return (
@@ -179,16 +176,6 @@ export function DashboardHeader({
           </div>
         </div>
 
-        <button
-          type="button"
-          aria-label="Notificacoes"
-          className="relative rounded-xl border border-zinc-300 bg-white p-2 text-zinc-700 transition hover:bg-zinc-100"
-        >
-          <Bell size={18} />
-          {consultasPendentes > 0 ? (
-            <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-orange-500" />
-          ) : null}
-        </button>
       </div>
     </header>
   );
