@@ -71,6 +71,7 @@ const navigationItems: NavItem[] = [
   { id: "endpoints", label: "Endpoints" },
   { id: "dados", label: "Dados" },
   { id: "diagrama-classes", label: "Diagrama" },
+  { id: "diagrama-sequencia", label: "Sequencia" },
   { id: "seguranca", label: "Seguranca" },
   { id: "operacao", label: "Operacao" },
 ];
@@ -1030,6 +1031,40 @@ NotificacaoConsultaService ..> JavaMailSender
 SecurityConfig ..> ClienteService
 `;
 
+const jornadaCadastroSequenceMermaid = String.raw`
+sequenceDiagram
+autonumber
+
+actor Usuario as Cliente
+participant Frontend as Frontend (Next.js)
+participant Api as Backend REST
+participant Banco as Banco de dados
+
+Usuario->>Frontend: Cadastra cliente
+Frontend->>Api: POST /clientes
+Api->>Banco: Salva cliente
+Banco-->>Api: Cliente criado
+Api-->>Frontend: 201 + dados
+
+Usuario->>Frontend: Cadastra endereco
+Frontend->>Api: POST /enderecos
+Api->>Banco: Salva endereco
+Banco-->>Api: Endereco criado
+Api-->>Frontend: 201 + dados
+
+Usuario->>Frontend: Cadastra pet
+Frontend->>Api: POST /pets
+Api->>Banco: Salva pet
+Banco-->>Api: Pet criado
+Api-->>Frontend: 201 + dados
+
+Usuario->>Frontend: Agenda consulta
+Frontend->>Api: POST /agendamentos
+Api->>Banco: Salva consulta
+Banco-->>Api: Consulta criada
+Api-->>Frontend: 201 + dados
+`;
+
 function methodBadgeClass(method: EndpointItem["method"]): string {
   if (method === "GET") {
     return "methodGet";
@@ -1255,7 +1290,7 @@ export default function DocumentacaoPage() {
         <p>
           Esta pagina resume o estado atual do sistema com foco pratico: o que existe no frontend,
           como o backend processa cada fluxo, quais regras de negocio estao ativas e como os modulos
-          se conectam no diagrama de classes.
+          se conectam nos diagramas de classes e de sequencia.
         </p>
 
         <div className="flowGrid">
@@ -1403,6 +1438,28 @@ export default function DocumentacaoPage() {
           <p className="groupTitle">Codigo Mermaid</p>
           <pre className="diagramCode">
             <code>{classDiagramMermaid}</code>
+          </pre>
+        </article>
+      </section>
+
+      <section id="diagrama-sequencia" className="docSection">
+        <div className="sectionHeader">
+          <h2>Diagrama simples de sequencia</h2>
+          <p className="sectionSubtitle">Jornada: cliente, endereco, pet e consulta</p>
+          <p>
+            Este fluxo resume a ordem principal da jornada do cliente: primeiro cadastro, depois
+            endereco, pet e por fim o agendamento da consulta.
+          </p>
+        </div>
+
+        <article className="featureCard diagramCard">
+          <MermaidClassDiagram chart={jornadaCadastroSequenceMermaid} />
+        </article>
+
+        <article className="featureCard diagramCodeCard">
+          <p className="groupTitle">Codigo Mermaid</p>
+          <pre className="diagramCode">
+            <code>{jornadaCadastroSequenceMermaid}</code>
           </pre>
         </article>
       </section>
